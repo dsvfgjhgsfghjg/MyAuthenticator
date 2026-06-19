@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
+
+    <!-- 顶部 Toolbar -->
+    <com.google.android.material.appbar.MaterialToolbar android:id="@+id/toolbar" android:layout_width="match_parent" android:layout_height="?attr/actionBarSize" app:title="@string/action_settings" app:navigationIcon="@android:drawable/ic_menu_revert" />
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:padding="16dp">
+
+        <!-- 连接状态卡片 -->
+        <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" app:cardCornerRadius="12dp" app:cardElevation="4dp">
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:padding="16dp">
+
+                <ImageView android:id="@+id/iv_connection_indicator" android:layout_width="32dp" android:layout_height="32dp" android:src="@android:drawable/presence_offline" />
+
+                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="12dp" android:layout_weight="1" android:orientation="vertical">
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/connection_status" android:textSize="12sp" android:textColor="@android:color/darker_gray" />
+
+                    <TextView android:id="@+id/tv_status" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/status_disconnected" android:textSize="16sp" android:textStyle="bold" />
+
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 设备信息卡片 -->
+        <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" app:cardCornerRadius="12dp" app:cardElevation="4dp">
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+
+                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/device_info" android:textSize="16sp" android:textStyle="bold" />
+
+                <TextView android:id="@+id/tv_username" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="用户: -" />
+
+                <TextView android:id="@+id/tv_device_id" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="设备 ID: -" android:textSize="12sp" />
+
+                <TextView android:id="@+id/tv_cipher" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="加密算法: -" android:textSize="12sp" />
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="horizontal" android:gravity="center_vertical">
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/cipher_pref_label" android:textSize="14sp" />
+
+                    <Spinner android:id="@+id/spinner_cipher" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:layout_weight="1" android:entries="@array/cipher_options" />
+
+                </LinearLayout>
+
+                <TextView android:id="@+id/tv_last_result" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/result_empty" android:textSize="12sp" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- 操作按钮 -->
+        <com.google.android.material.button.MaterialButton android:id="@+id/btn_toggle_connection" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8dp" android:text="@string/btn_connect" />
+
+        <com.google.android.material.button.MaterialButton android:id="@+id/btn_unbind" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8dp" android:text="@string/btn_unbind" app:backgroundTint="@android:color/holo_orange_dark" />
+
+        <com.google.android.material.button.MaterialButton android:id="@+id/btn_exit" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/btn_exit" app:backgroundTint="@android:color/holo_red_dark" />
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical">
+
+    <!-- 筛选 ChipGroup -->
+    <com.google.android.material.chip.ChipGroup android:id="@+id/chip_group" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingHorizontal="12dp" android:paddingVertical="8dp" app:singleSelection="true" app:selectionRequired="false">
+
+        <com.google.android.material.chip.Chip android:id="@+id/chip_all" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/filter_all" android:checked="true" />
+
+        <com.google.android.material.chip.Chip android:id="@+id/chip_approved" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/filter_approved" />
+
+        <com.google.android.material.chip.Chip android:id="@+id/chip_rejected" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/filter_rejected" />
+
+        <com.google.android.material.chip.Chip android:id="@+id/chip_expired" style="@style/Widget.MaterialComponents.Chip.Filter" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/filter_expired" />
+
+    </com.google.android.material.chip.ChipGroup>
+
+    <!-- 进度指示器 -->
+    <ProgressBar android:id="@+id/progress_bar" android:layout_width="36dp" android:layout_height="36dp" android:layout_gravity="center" android:layout_marginTop="24dp" android:visibility="gone" />
+
+    <!-- 空状态 -->
+    <TextView android:id="@+id/tv_empty" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="48dp" android:gravity="center" android:text="@string/auth_history_empty" android:textSize="16sp" android:textColor="@android:color/darker_gray" android:visibility="gone" />
+
+    <!-- 认证历史列表 -->
+    <androidx.recyclerview.widget.RecyclerView android:id="@+id/rv_history" android:layout_width="match_parent" android:layout_height="match_parent" android:clipToPadding="false" android:padding="8dp" />
+
+</LinearLayout>

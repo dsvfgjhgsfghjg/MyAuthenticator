@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="28dp" android:background="@android:color/white" android:elevation="8dp">
+
+    <!-- 标题 -->
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🔐 安全验证" android:textSize="20sp" android:textStyle="bold" android:textColor="#1a1a1a" android:layout_marginBottom="8dp" />
+
+    <!-- 副标题 -->
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="管理后台正在验证您的身份" android:textSize="14sp" android:textColor="#666666" android:layout_marginBottom="4dp" />
+
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="请选择正确的数字" android:textSize="14sp" android:textColor="#666666" android:layout_marginBottom="20dp" />
+
+    <!-- 倒计时 -->
+    <TextView android:id="@+id/tv_countdown" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="16sp" android:textColor="#E6A23C" android:text="⏱ 剩余 60 秒" android:layout_marginBottom="24dp" android:layout_gravity="center" />
+
+    <!-- 3 个数字选项 -->
+    <LinearLayout android:id="@+id/options_container" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center" android:weightSum="3">
+
+        <Button android:id="@+id/btn_option_1" android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="1" android:layout_marginEnd="8dp" android:textSize="22sp" android:textStyle="bold" style="@style/Widget.AppCompat.Button" />
+
+        <Button android:id="@+id/btn_option_2" android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="1" android:layout_marginHorizontal="8dp" android:textSize="22sp" android:textStyle="bold" style="@style/Widget.AppCompat.Button" />
+
+        <Button android:id="@+id/btn_option_3" android:layout_width="0dp" android:layout_height="56dp" android:layout_weight="1" android:layout_marginStart="8dp" android:textSize="22sp" android:textStyle="bold" style="@style/Widget.AppCompat.Button" />
+
+    </LinearLayout>
+
+    <!-- 加载状态（选择后显示） -->
+    <ProgressBar android:id="@+id/progress_bar" android:layout_width="48dp" android:layout_height="48dp" android:layout_gravity="center" android:visibility="gone" android:layout_marginBottom="16dp" />
+
+    <!-- 状态信息 -->
+    <TextView android:id="@+id/tv_status" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:textSize="16sp" android:textColor="#1a1a1a" android:visibility="gone" android:layout_marginBottom="8dp" />
+
+    <!-- 底部提示 -->
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="选择错误将导致验证失败" android:textSize="12sp" android:textColor="#999999" android:layout_marginTop="16dp" android:layout_gravity="center" />
+
+</LinearLayout>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- CLANNAD 竹青色系 -->
+    <color name="profile_header_bg">#F3ECF1</color>
+    <color name="profile_text_dark">#4A3F4B</color>
+    <color name="profile_text_secondary">#8B7E8C</color>
+    <color name="profile_divider">#D6B0BD</color>
+
+    <!-- 认证状态颜色 -->
+    <color name="status_approved">#4CAF50</color>
+    <color name="status_rejected">#F44336</color>
+    <color name="status_expired">#9E9E9E</color>
+    <color name="status_pending">#FF9800</color>
+</resources>

@@ -1,0 +1,110 @@
+<resources>
+    <string name="app_name">MyAuthenticator</string>
+    <string name="action_settings">设置</string>
+
+    <!-- 底部导航栏 -->
+    <string name="tab_authenticator">Authenticator</string>
+    <string name="tab_dashboard">Dashboard</string>
+    <string name="tab_profile">我的</string>
+
+    <!-- 我的页面 -->
+    <string name="empty_accounts">暂无账户</string>
+    <string name="result_empty">上次结果: -</string>
+
+    <!-- 绑定页面 -->
+    <string name="bind_title">绑定设备</string>
+    <string name="bind_password_title">密码绑定</string>
+    <string name="bind_qrcode_title">扫码绑定</string>
+    <string name="username_hint">用户名</string>
+    <string name="password_hint">密码</string>
+    <string name="pair_code_hint">配对码（6位数字）</string>
+    <string name="device_name_hint">设备名称（可选）</string>
+    <string name="btn_bind_password">密码绑定</string>
+    <string name="btn_bind_qrcode">扫码绑定</string>
+    <string name="binding_status">正在绑定...</string>
+    <string name="bind_success">绑定成功！</string>
+    <string name="bind_failed">绑定失败</string>
+
+    <!-- 主界面 -->
+    <string name="connection_status">连接状态</string>
+    <string name="status_connected">已连接</string>
+    <string name="status_disconnected">未连接</string>
+    <string name="status_connecting">正在连接...</string>
+    <string name="device_info">设备信息</string>
+    <string name="btn_connect">重新连接</string>
+    <string name="btn_disconnect">断开连接</string>
+    <string name="btn_unbind">解绑设备</string>
+    <string name="btn_exit">退出</string>
+
+    <!-- 挑战对话框 -->
+    <string name="challenge_title">请选择一个数字</string>
+    <string name="challenge_message">从以下数字中选择一个</string>
+    <string name="challenge_expired">挑战已过期</string>
+    <string name="remaining_time">剩余 %d 秒</string>
+
+    <!-- 认证结果 -->
+    <string name="auth_approved">✅ 认证通过</string>
+    <string name="auth_rejected">❌ 认证被拒绝</string>
+    <string name="auth_expired">⏰ 挑战已过期</string>
+    <string name="result_approved">上次结果: 已批准</string>
+    <string name="result_rejected">上次结果: 已拒绝</string>
+    <string name="result_expired">上次结果: 已过期</string>
+
+    <!-- v2 新增：加密算法信息 -->
+    <string name="security_info">设备信息</string>
+    <string name="cipher_key_exchange">密钥交换算法</string>
+    <string name="cipher_data_encryption">数据加密算法</string>
+    <string name="cipher_available">可用算法</string>
+    <string name="cipher_device_pref">设备首选</string>
+    <string name="auth_history">认证历史</string>
+    <string name="debug_info">🔧 调试信息</string>
+    <string name="auth_history_empty">暂无认证记录</string>
+    <string name="filter_all">全部</string>
+    <string name="filter_approved">已批准</string>
+    <string name="filter_rejected">已拒绝</string>
+    <string name="filter_expired">已过期</string>
+    <string name="status_pending">等待中</string>
+    <string name="label_username">用户名</string>
+    <string name="label_email">邮箱</string>
+    <string name="label_bound_at">绑定时间</string>
+    <string name="label_last_login">最后登录</string>
+    <string name="label_device_count">已绑定 %d 台设备</string>
+    <string name="label_not_bound">尚未绑定设备</string>
+    <string name="loading_failed">加载失败，请检查网络</string>
+
+    <!-- 错误消息 -->
+    <string name="error_network">网络错误</string>
+    <string name="error_username_empty">请输入用户名</string>
+    <string name="error_password_empty">请输入密码</string>
+    <string name="error_pair_code_empty">请输入配对码</string>
+    <string name="error_bind_failed">绑定失败: %s</string>
+    <string name="unbind_success">已解绑设备</string>
+
+    <!-- 加密算法切换 -->
+    <string name="cipher_pref_label">首选加密算法</string>
+    <string name="cipher_switched">已切换至 %s</string>
+    <string name="cipher_switch_failed">切换失败: %s</string>
+
+    <string-array name="cipher_options">
+        <item>AES-256-GCM</item>
+        <item>SM4-GCM</item>
+    </string-array>
+
+    <!-- 调试页面上传 -->
+    <string name="upload_debug_info">📤 上传调试信息</string>
+    <string name="upload_success">调试信息已上传</string>
+    <string name="upload_failed">上传失败：%s</string>
+
+    <!-- Bug 日志上报 -->
+    <string name="menu_feedback">提交反馈</string>
+    <string name="bug_report_title">提交反馈</string>
+    <string name="bug_report_hint">请描述您遇到的问题</string>
+    <string name="bug_report_desc_hint">问题描述</string>
+    <string name="bug_report_hint_detail">请描述您遇到的问题，系统将同时上传最近的运行日志</string>
+    <string name="btn_submit_feedback">提交</string>
+    <string name="btn_cancel">取消</string>
+    <string name="bug_report_success">反馈已提交，感谢您的帮助！</string>
+    <string name="bug_report_failed">提交失败：%s</string>
+    <string name="bug_report_empty_hint">请描述遇到的问题</string>
+    <string name="bug_report_submitting">正在提交反馈...</string>
+</resources>

@@ -1,0 +1,48 @@
+[
+    // ============ 无线调试配对（首次使用） ============
+    {
+        "key": "ctrl+shift+p",
+        "command": "workbench.action.tasks.runTask",
+        "args": "⚡ Wireless: ADB 配对"
+    },
+    // ============ 编译快捷 ============
+    {
+        "key": "ctrl+shift+b",
+        "command": "workbench.action.tasks.runTask",
+        "args": "⚡ Wireless: Build + Install + Run"
+    },
+    {
+        "key": "ctrl+alt+b",
+        "command": "workbench.action.tasks.runTask",
+        "args": "Build Debug APK (with timestamp)"
+    },
+    // ============ 安装 & 启动 ============
+    {
+        "key": "ctrl+shift+enter",
+        "command": "workbench.action.tasks.runTask",
+        "args": "⚡ Wireless: Install + Run (no build)"
+    },
+    // ============ 日志 ============
+    {
+        "key": "ctrl+shift+l",
+        "command": "workbench.action.tasks.runTask",
+        "args": "⚡ Wireless: Logcat (App only)"
+    },
+    {
+        "key": "ctrl+alt+l",
+        "command": "workbench.action.tasks.runTask",
+        "args": "View App Logs (logcat)"
+    },
+    // ============ 清理 ============
+    {
+        "key": "ctrl+alt+c",
+        "command": "workbench.action.tasks.runTask",
+        "args": "Clean & Build Debug APK"
+    },
+    // ============ 仅编译检查 ============
+    {
+        "key": "ctrl+alt+k",
+        "command": "workbench.action.tasks.runTask",
+        "args": "Build Only (check compile errors)"
+    }
+]

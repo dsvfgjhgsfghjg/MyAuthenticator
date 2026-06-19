@@ -1,0 +1,27 @@
+{
+    // Java 配置 - 使用环境变量 JAVA_HOME
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-21",
+            "path": "${env:HOME}/.jdks/liberica-full-21.0.11",
+            "default": true
+        }
+    ],
+    "java.jdt.ls.java.home": "${env:JAVA_HOME}",
+    "java.home": "${env:JAVA_HOME}",
+    // Android SDK 路径
+    "android.sdkPath": "${env:ANDROID_HOME}",
+    // Gradle 配置
+    "gradle.java.home": "${env:JAVA_HOME}",
+    // 文件排除 (加快搜索速度)
+    "files.exclude": {
+        "**/.gradle": true,
+        "**/build": true,
+        "**/.idea": true
+    },
+    // 编辑器设置
+    "editor.formatOnSave": true,
+    "files.encoding": "utf-8",
+    "files.eol": "\n",
+    "java.configuration.updateBuildConfiguration": "interactive",
+}

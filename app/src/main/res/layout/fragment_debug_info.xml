@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+
+        <!-- ============ 设备状态信息卡片 ============ -->
+        <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" app:cardCornerRadius="12dp" app:cardElevation="2dp">
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="📋 设备状态" android:textSize="18sp" android:textStyle="bold" />
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="vertical">
+
+                    <!-- Token -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:paddingVertical="6dp">
+
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="Token" android:textStyle="bold" />
+
+                        <TextView android:id="@+id/tv_debug_token" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- DeviceId -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:paddingVertical="6dp">
+
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="DeviceId" android:textStyle="bold" />
+
+                        <TextView android:id="@+id/tv_debug_device_id" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- UserId -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:paddingVertical="6dp">
+
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="UserId" android:textStyle="bold" />
+
+                        <TextView android:id="@+id/tv_debug_user_id" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- Username -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:paddingVertical="6dp">
+
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="Username" android:textStyle="bold" />
+
+                        <TextView android:id="@+id/tv_debug_username" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- CipherPref -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:paddingVertical="6dp">
+
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="CipherPref" android:textStyle="bold" />
+
+                        <TextView android:id="@+id/tv_debug_cipher_pref" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- 网络环境 -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:paddingVertical="6dp">
+
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="网络环境" android:textStyle="bold" />
+
+                        <TextView android:id="@+id/tv_debug_env" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- REST URL -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:paddingVertical="6dp">
+
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="REST URL" android:textStyle="bold" />
+
+                        <TextView android:id="@+id/tv_debug_rest_url" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- WS URL -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:paddingVertical="6dp">
+
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="WS URL" android:textStyle="bold" />
+
+                        <TextView android:id="@+id/tv_debug_ws_url" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- WS 连接状态 -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:paddingVertical="6dp">
+
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="WS 连接" android:textStyle="bold" />
+
+                        <TextView android:id="@+id/tv_debug_ws_status" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- 重连次数 -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:paddingVertical="6dp">
+
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="重连次数" android:textStyle="bold" />
+
+                        <TextView android:id="@+id/tv_debug_reconnect_count" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="0" android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- 上次断连时间 -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:paddingVertical="6dp">
+
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="上次断连" android:textStyle="bold" />
+
+                        <TextView android:id="@+id/tv_debug_last_disconnect_time" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- 上次断连原因 -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:paddingVertical="6dp">
+
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="断连原因" android:textStyle="bold" />
+
+                        <TextView android:id="@+id/tv_debug_last_disconnect_reason" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textSize="13sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ============ API 测试卡片 ============ -->
+        <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" app:cardCornerRadius="12dp" app:cardElevation="2dp">
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="🧪 测试诊断" android:textSize="18sp" android:textStyle="bold" />
+
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="API 测试、WebSocket 连接诊断、会话检查" android:textSize="13sp" android:textColor="@android:color/darker_gray" />
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="horizontal">
+
+                    <Button android:id="@+id/btn_test_profile" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginEnd="4dp" android:text="Profile" android:textSize="13sp" />
+
+                    <Button android:id="@+id/btn_test_cipher" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="4dp" android:text="CipherInfo" android:textSize="13sp" />
+
+                </LinearLayout>
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:orientation="horizontal">
+
+                    <Button android:id="@+id/btn_test_ws" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginEnd="4dp" android:text="WebSocket" android:textSize="13sp" />
+
+                    <Button android:id="@+id/btn_test_session" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="4dp" android:text="调试会话" android:textSize="13sp" />
+
+                </LinearLayout>
+
+                <!-- API 测试结果 -->
+                <TextView android:id="@+id/tv_api_result" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:background="@color/profile_header_bg" android:padding="12dp" android:text="点击按钮进行测试" android:textColor="@color/profile_text_dark" android:textSize="12sp" android:typeface="monospace" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ============ 操作日志卡片 ============ -->
+        <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" app:cardCornerRadius="12dp" app:cardElevation="2dp">
+
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="📝 操作日志" android:textSize="18sp" android:textStyle="bold" />
+
+                <TextView android:id="@+id/tv_debug_logs" android:layout_width="match_parent" android:layout_height="200dp" android:layout_marginTop="8dp" android:background="@color/profile_header_bg" android:padding="8dp" android:text="暂无日志" android:textColor="@color/profile_text_dark" android:textSize="11sp" android:typeface="monospace" android:scrollbars="vertical" />
+
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- ============ 一键复制按钮 ============ -->
+        <Button android:id="@+id/btn_copy_debug" android:layout_width="match_parent" android:layout_height="56dp" android:text="📋 一键复制调试信息" android:textSize="16sp" android:textStyle="bold" />
+
+        <!-- ============ 上传调试信息按钮 ============ -->
+        <Button android:id="@+id/btn_upload_debug" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="8dp" android:text="📤 上传调试信息" android:textSize="16sp" android:textStyle="bold" />
+
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:orientation="horizontal">
+
+            <Button android:id="@+id/btn_clear_logs" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginEnd="4dp" android:text="清空日志" android:textSize="13sp" />
+
+            <Button android:id="@+id/btn_refresh_status" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="4dp" android:text="刷新状态" android:textSize="13sp" />
+
+        </LinearLayout>
+
+        <!-- 底部留白 -->
+        <View android:layout_width="match_parent" android:layout_height="24dp" />
+
+    </LinearLayout>
+</ScrollView>
