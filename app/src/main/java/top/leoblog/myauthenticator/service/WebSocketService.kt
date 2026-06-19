@@ -66,6 +66,7 @@ class WebSocketService : Service() {
         const val ACTION_DISCONNECT = "top.leoblog.myauthenticator.DISCONNECT"
         const val EXTRA_TOKEN = "extra_token"
         const val EXTRA_DEVICE_ID = "extra_device_id"
+        const val EXTRA_DEVICE_SECRET = "extra_device_secret"
 
         // 重连参数
         private const val RECONNECT_MIN_DELAY_MS = 1_000L     // 1 秒
@@ -134,6 +135,7 @@ class WebSocketService : Service() {
     private lateinit var secureStorage: SecureStorage
     private var savedToken: String? = null
     private var savedDeviceId: String? = null
+    private var savedDeviceSecret: String? = null
 
     // 重连控制
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -163,12 +165,14 @@ class WebSocketService : Service() {
             ACTION_CONNECT -> {
                 val token = intent.getStringExtra(EXTRA_TOKEN) ?: secureStorage.getToken()
                 val deviceId = intent.getStringExtra(EXTRA_DEVICE_ID) ?: secureStorage.getDeviceId()
+                val deviceSecret = intent.getStringExtra(EXTRA_DEVICE_SECRET) ?: secureStorage.getDeviceSecret() ?: ""
 
                 if (token != null && deviceId != null) {
                     savedToken = token
                     savedDeviceId = deviceId
+                    savedDeviceSecret = deviceSecret
                     startForeground(NOTIFICATION_ID, createNotification("正在连接..."))
-                    connectWebSocket(token, deviceId)
+                    connectWebSocket(token, deviceId, deviceSecret)
                 } else {
                     Log.e(TAG, "缺少 Token 或 DeviceId")
                     stopSelf()
@@ -187,8 +191,12 @@ class WebSocketService : Service() {
 
     /**
      * 连接 WebSocket
+     *
+     * @param token JWT Token
+     * @param deviceId 设备 ID（svr_<UUID> 或客户端生成 ID）
+     * @param deviceSecret 设备密钥（服务端下发，可为空字符串兼容旧版）
      */
-    private fun connectWebSocket(token: String, deviceId: String) {
+    private fun connectWebSocket(token: String, deviceId: String, deviceSecret: String = "") {
         webSocketClient?.disconnect()
         cancelReconnect()
         shouldReconnect = true
@@ -196,6 +204,7 @@ class WebSocketService : Service() {
         val client = AppWebSocketClient(
             token = token,
             deviceId = deviceId,
+            deviceSecret = deviceSecret,
             listener = object : AppWebSocketClient.WebSocketListenerCallback {
                 override fun onConnected() {
                     connectionEstablishedTime = System.currentTimeMillis()
@@ -363,11 +372,12 @@ class WebSocketService : Service() {
 
         val token = savedToken ?: secureStorage.getToken()
         val deviceId = savedDeviceId ?: secureStorage.getDeviceId()
+        val deviceSecret = savedDeviceSecret ?: secureStorage.getDeviceSecret() ?: ""
 
         if (token != null && deviceId != null) {
             webSocketClient?.incrementReconnectCount()
             handshakeCallback?.onReconnectCountChanged(webSocketClient?.getReconnectCount() ?: 0)
-            connectWebSocket(token, deviceId)
+            connectWebSocket(token, deviceId, deviceSecret)
         } else {
             Log.e(TAG, "重连失败: Token 或 DeviceId 为空")
         }

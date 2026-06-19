@@ -7,10 +7,10 @@
             "command": "./gradlew assembleDebug --no-configuration-cache && cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/app-debug_$(date +%Y%m%d_%H%M).apk",
             "options": {
                 "env": {
-                    "JAVA_HOME": "${env:JAVA_HOME}",
-                    "ANDROID_HOME": "${env:ANDROID_HOME}",
-                    "ANDROID_SDK_ROOT": "${env:ANDROID_HOME}",
-                    "PATH": "${env:JAVA_HOME}/bin:${env:ANDROID_HOME}/platform-tools:${env:PATH}"
+                    "JAVA_HOME": "${env:HOME}/.jdks/liberica-full-21.0.11",
+                    "ANDROID_HOME": "${env:HOME}/Android/Sdk",
+                    "ANDROID_SDK_ROOT": "${env:HOME}/Android/Sdk",
+                    "PATH": "${env:HOME}/.jdks/liberica-full-21.0.11/bin:${env:HOME}/Android/Sdk/platform-tools:${env:PATH}"
                 }
             },
             "group": {
@@ -35,9 +35,10 @@
             "command": "rm -rf .gradle/configuration-cache app/build && ./gradlew clean assembleDebug --no-daemon --no-configuration-cache && DATE_TAG=$(date +%Y%m%d_%H%M) && cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/apk/debug/app-debug_$DATE_TAG.apk && adb install -r app/build/outputs/apk/debug/app-debug_$DATE_TAG.apk",
             "options": {
                 "env": {
-                    "ANDROID_HOME": "${env:ANDROID_HOME}",
-                    "ANDROID_SDK_ROOT": "${env:ANDROID_HOME}",
-                    "PATH": "${env:ANDROID_HOME}/platform-tools:${env:PATH}"
+                    "JAVA_HOME": "${env:HOME}/.jdks/liberica-full-21.0.11",
+                    "ANDROID_HOME": "${env:HOME}/Android/Sdk",
+                    "ANDROID_SDK_ROOT": "${env:HOME}/Android/Sdk",
+                    "PATH": "${env:HOME}/.jdks/liberica-full-21.0.11/bin:${env:HOME}/Android/Sdk/platform-tools:${env:PATH}"
                 }
             },
             "group": {
@@ -59,10 +60,10 @@
             "command": "rm -rf .gradle/configuration-cache app/build && ./gradlew clean assembleDebug --no-configuration-cache",
             "options": {
                 "env": {
-                    "JAVA_HOME": "${env:JAVA_HOME}",
-                    "ANDROID_HOME": "${env:ANDROID_HOME}",
-                    "ANDROID_SDK_ROOT": "${env:ANDROID_HOME}",
-                    "PATH": "${env:JAVA_HOME}/bin:${env:ANDROID_HOME}/platform-tools:${env:PATH}"
+                    "JAVA_HOME": "${env:HOME}/.jdks/liberica-full-21.0.11",
+                    "ANDROID_HOME": "${env:HOME}/Android/Sdk",
+                    "ANDROID_SDK_ROOT": "${env:HOME}/Android/Sdk",
+                    "PATH": "${env:HOME}/.jdks/liberica-full-21.0.11/bin:${env:HOME}/Android/Sdk/platform-tools:${env:PATH}"
                 }
             },
             "group": "build",
@@ -84,10 +85,10 @@
             "command": "./gradlew compileDebugKotlin --no-configuration-cache",
             "options": {
                 "env": {
-                    "JAVA_HOME": "${env:JAVA_HOME}",
-                    "ANDROID_HOME": "${env:ANDROID_HOME}",
-                    "ANDROID_SDK_ROOT": "${env:ANDROID_HOME}",
-                    "PATH": "${env:JAVA_HOME}/bin:${env:ANDROID_HOME}/platform-tools:${env:PATH}"
+                    "JAVA_HOME": "${env:HOME}/.jdks/liberica-full-21.0.11",
+                    "ANDROID_HOME": "${env:HOME}/Android/Sdk",
+                    "ANDROID_SDK_ROOT": "${env:HOME}/Android/Sdk",
+                    "PATH": "${env:HOME}/.jdks/liberica-full-21.0.11/bin:${env:HOME}/Android/Sdk/platform-tools:${env:PATH}"
                 }
             },
             "group": "build",
@@ -109,7 +110,7 @@
             "command": "adb logcat -v time | grep -i myauthenticator",
             "options": {
                 "env": {
-                    "PATH": "${env:ANDROID_HOME}/platform-tools:${env:PATH}"
+                    "PATH": "${env:HOME}/Android/Sdk/platform-tools:${env:PATH}"
                 }
             },
             "group": "none",
@@ -130,7 +131,7 @@
             "command": "bash adb_wireless_debug.sh pair ${input:pairIpPort} ${input:pairCode}",
             "options": {
                 "env": {
-                    "PATH": "${env:ANDROID_HOME}/platform-tools:${env:PATH}"
+                    "PATH": "${env:HOME}/Android/Sdk/platform-tools:${env:PATH}"
                 }
             },
             "presentation": {
@@ -149,10 +150,10 @@
             "command": "bash adb_wireless_debug.sh all",
             "options": {
                 "env": {
-                    "JAVA_HOME": "${env:JAVA_HOME}",
-                    "ANDROID_HOME": "${env:ANDROID_HOME}",
-                    "ANDROID_SDK_ROOT": "${env:ANDROID_HOME}",
-                    "PATH": "${env:JAVA_HOME}/bin:${env:ANDROID_HOME}/platform-tools:${env:PATH}"
+                    "JAVA_HOME": "${env:HOME}/.jdks/liberica-full-21.0.11",
+                    "ANDROID_HOME": "${env:HOME}/Android/Sdk",
+                    "ANDROID_SDK_ROOT": "${env:HOME}/Android/Sdk",
+                    "PATH": "${env:HOME}/.jdks/liberica-full-21.0.11/bin:${env:HOME}/Android/Sdk/platform-tools:${env:PATH}"
                 }
             },
             "group": "none",
@@ -174,7 +175,7 @@
             "command": "adb install -r app/build/outputs/apk/debug/app-debug.apk && adb shell am start -n top.leoblog.myauthenticator/.ui.main.MainActivity",
             "options": {
                 "env": {
-                    "PATH": "${env:ANDROID_HOME}/platform-tools:${env:PATH}"
+                    "PATH": "${env:HOME}/Android/Sdk/platform-tools:${env:PATH}"
                 }
             },
             "group": "none",
@@ -194,7 +195,7 @@
             "command": "adb logcat -v time --pid=$(adb shell pidof -s top.leoblog.myauthenticator 2>/dev/null) || adb logcat -v time | grep --line-buffered myauthenticator",
             "options": {
                 "env": {
-                    "PATH": "${env:ANDROID_HOME}/platform-tools:${env:PATH}"
+                    "PATH": "${env:HOME}/Android/Sdk/platform-tools:${env:PATH}"
                 }
             },
             "group": "none",

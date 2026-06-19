@@ -23,6 +23,7 @@ import top.leoblog.myauthenticator.network.NetworkConfig
 import top.leoblog.myauthenticator.network.RetrofitClient
 import top.leoblog.myauthenticator.storage.SecureStorage
 import top.leoblog.myauthenticator.ui.login.LoginActivity
+import top.leoblog.myauthenticator.ui.main.AuthHistoryFragment
 import top.leoblog.myauthenticator.ui.debug.DebugInfoFragment
 import top.leoblog.myauthenticator.ui.security.SecurityInfoFragment
 import top.leoblog.myauthenticator.ui.settings.SettingsActivity
@@ -57,7 +58,37 @@ class ProfileFragment : Fragment() {
 
         setupViews()
         setupSwipeRefresh()
-        loadProfile()
+
+        // 检查是否已登录，未登录则显示登录提示
+        if (secureStorage.getToken() == null) {
+            showLoginPrompt()
+        } else {
+            loadProfile()
+        }
+    }
+
+    /**
+     * 未登录时显示登录提示，隐藏个人信息区域
+     */
+    private fun showLoginPrompt() {
+        bindingView.findViewById<TextView>(R.id.tv_nickname)?.text = "未登录"
+        // 隐藏邮箱、设备数、绑定时间、最后登录等字段
+        bindingView.findViewById<View>(R.id.tv_email)?.visibility = View.GONE
+        bindingView.findViewById<View>(R.id.tv_device_count)?.visibility = View.GONE
+        bindingView.findViewById<View>(R.id.tv_bound_at)?.visibility = View.GONE
+        bindingView.findViewById<View>(R.id.tv_last_login)?.visibility = View.GONE
+        bindingView.findViewById<SwipeRefreshLayout>(R.id.swipe_refresh)?.isEnabled = false
+        // 将"切换账号"改为"登录/绑定设备"
+        val switchAccountView = bindingView.findViewById<android.widget.LinearLayout>(R.id.ll_menu_switch_account)
+        switchAccountView?.setOnClickListener {
+            val intent = Intent(requireContext(), LoginActivity::class.java)
+            startActivity(intent)
+        }
+        // 找到切换账号行中的 TextView（第2个子View，index=1），修改文字
+        if (switchAccountView != null && switchAccountView.childCount > 1) {
+            val textView = switchAccountView.getChildAt(1) as? TextView
+            textView?.text = "登录 / 绑定设备"
+        }
     }
 
     private fun setupViews() {
@@ -133,40 +164,103 @@ class ProfileFragment : Fragment() {
                     authorization = "Bearer $token"
                 )
                 if (response.isSuccessful && response.body()?.data != null) {
-                    displayProfile(response.body()!!.data!!)
+                    val profile = response.body()!!.data!!
+                    displayProfile(profile)
+                    // 缓存 Profile 数据供调试页面使用
+                    cacheProfile(profile)
+                } else {
+                    android.util.Log.w("Profile", "获取用户信息失败: HTTP ${response.code()}, 尝试使用缓存数据")
+                    displayCachedProfile()
                 }
             } catch (e: Exception) {
-                android.util.Log.e("Profile", "获取用户信息失败", e)
-                // 静默失败，本地已有基础信息
+                android.util.Log.e("Profile", "获取用户信息异常, 尝试使用缓存数据", e)
+                displayCachedProfile()
             } finally {
                 bindingView.findViewById<SwipeRefreshLayout>(R.id.swipe_refresh).isRefreshing = false
             }
         }
     }
 
-    private fun displayProfile(profile: UserProfileResponse) {
-        // 头像 — 处理后端返回的相对路径
-        profile.avatarUrl?.let { avatarUrl ->
-            if (avatarUrl.isNotBlank()) {
-                val fullUrl = if (avatarUrl.startsWith("http")) {
-                    avatarUrl
-                } else {
-                    // 相对路径，拼接 REST API 基础 URL
-                    val base = NetworkConfig.restBaseUrl.trimEnd('/')
-                    val path = avatarUrl.trimStart('/')
-                    "$base/$path"
-                }
-                bindingView.findViewById<android.widget.ImageView>(R.id.iv_avatar).let { imageView ->
-                    imageView.load(fullUrl) {
-                        placeholder(R.drawable.ic_people)
-                        error(R.drawable.ic_people)
-                        crossfade(true)
-                    }
+    /**
+     * 当 API 调用失败时，使用 SecureStorage 中的缓存数据显示 Profile
+     */
+    private fun displayCachedProfile() {
+        // 邮箱
+        secureStorage.getProfileEmail()?.let { email ->
+            bindingView.findViewById<TextView>(R.id.tv_email).text = email
+        }
+
+        // 设备数
+        val deviceCount = secureStorage.getProfileDeviceCount()
+        if (deviceCount >= 0) {
+            bindingView.findViewById<TextView>(R.id.tv_device_count).text = "$deviceCount"
+        }
+
+        // 头像 — 使用公开头像 API（userId 从本地存获取）
+        val userId = secureStorage.getUserId()
+        if (userId > 0) {
+            val base = NetworkConfig.restBaseUrl.trimEnd('/')
+            val avatarApiUrl = "$base/api/users/avatar/public/$userId"
+            android.util.Log.d("Profile", "缓存头像 API URL: $avatarApiUrl")
+            bindingView.findViewById<android.widget.ImageView>(R.id.iv_avatar).let { imageView ->
+                imageView.load(avatarApiUrl) {
+                    placeholder(R.drawable.ic_people)
+                    error(R.drawable.ic_people)
+                    crossfade(true)
+                    listener(
+                        onSuccess = { _, _ ->
+                            android.util.Log.d("Profile", "Coil缓存头像加载成功 url=$avatarApiUrl")
+                        },
+                        onError = { _, error ->
+                            android.util.Log.e("Profile", "Coil缓存头像加载失败 url=$avatarApiUrl, error=${error.throwable.message}")
+                        }
+                    )
                 }
             }
         }
 
-        //
+        // 绑定时间
+        secureStorage.getProfileBoundAt()?.let { boundAt ->
+            bindingView.findViewById<TextView>(R.id.tv_bound_at).text = formatDateTime(boundAt)
+        }
+
+        // 最后登录时间
+        secureStorage.getProfileLastLoginAt()?.let { lastLogin ->
+            bindingView.findViewById<TextView>(R.id.tv_last_login).text = "最后登录: ${formatDateTime(lastLogin)}"
+        }
+    }
+
+    private fun displayProfile(profile: UserProfileResponse) {
+        android.util.Log.d("Profile", "displayProfile: userId=${profile.userId}, avatarUrl=${profile.avatarUrl}, email=${profile.email}, deviceCount=${profile.deviceCount}")
+
+        // 头像 — 使用公开头像 API，忽略 avatarUrl（它是 MinIO 原始路径，不能直接渲染）
+        val base = NetworkConfig.restBaseUrl.trimEnd('/')
+        val avatarApiUrl = "$base/api/users/avatar/public/${profile.userId}"
+        android.util.Log.d("Profile", "头像 API URL: $avatarApiUrl")
+        bindingView.findViewById<android.widget.ImageView>(R.id.iv_avatar).let { imageView ->
+            imageView.load(avatarApiUrl) {
+                placeholder(R.drawable.ic_people)
+                error(R.drawable.ic_people)
+                crossfade(true)
+                listener(
+                    onSuccess = { _, _ ->
+                        android.util.Log.d("Profile", "Coil头像加载成功 url=$avatarApiUrl")
+                    },
+                    onError = { _, error ->
+                        android.util.Log.e("Profile", "Coil头像加载失败 url=$avatarApiUrl, error=${error.throwable.message}")
+                    }
+                )
+            }
+        }
+
+        // 邮箱
+        bindingView.findViewById<TextView>(R.id.tv_email).text = profile.email ?: ""
+
+        // 已绑定设备数
+        bindingView.findViewById<TextView>(R.id.tv_device_count).text = "${profile.deviceCount}"
+        android.util.Log.d("Profile", "deviceCount = ${profile.deviceCount}")
+
+        // 绑定时间
         profile.boundAt?.let { boundAt ->
             bindingView.findViewById<TextView>(R.id.tv_bound_at).text = formatDateTime(boundAt)
         } ?: run {
@@ -177,6 +271,17 @@ class ProfileFragment : Fragment() {
         profile.lastLoginAt?.let { lastLogin ->
             bindingView.findViewById<TextView>(R.id.tv_last_login).text = "最后登录: ${formatDateTime(lastLogin)}"
         }
+    }
+
+    /**
+     * 缓存 Profile 数据到 SecureStorage，供调试页面使用
+     */
+    private fun cacheProfile(profile: UserProfileResponse) {
+        profile.email?.let { secureStorage.saveProfileEmail(it) }
+        secureStorage.saveProfileDeviceCount(profile.deviceCount)
+        profile.avatarUrl?.let { secureStorage.saveProfileAvatarUrl(it) }
+        profile.boundAt?.let { secureStorage.saveProfileBoundAt(it) }
+        profile.lastLoginAt?.let { secureStorage.saveProfileLastLoginAt(it) }
     }
 
     private fun formatDateTime(isoDateTime: String): String {

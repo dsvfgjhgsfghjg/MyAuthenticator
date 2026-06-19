@@ -8,9 +8,12 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import top.leoblog.myauthenticator.R
 import top.leoblog.myauthenticator.databinding.ActivityBindBinding
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import top.leoblog.myauthenticator.model.BindPasswordRequest
 import top.leoblog.myauthenticator.model.BindQrCodeRequest
 import top.leoblog.myauthenticator.network.RetrofitClient
+import top.leoblog.myauthenticator.model.DeviceSecretResponse
 import top.leoblog.myauthenticator.storage.DeviceIdManager
 import top.leoblog.myauthenticator.storage.SecureStorage
 import top.leoblog.myauthenticator.ui.main.MainActivity
@@ -36,6 +39,19 @@ class BindActivity : AppCompatActivity() {
 
         secureStorage = SecureStorage(this)
         setupViews()
+    }
+
+    /**
+     * 确保设备码就绪，若本地没有则调用服务端 API 获取
+     */
+    private suspend fun ensureDeviceSecretReady(): Boolean {
+        val existingSecret = secureStorage.getDeviceSecret()
+        if (!existingSecret.isNullOrBlank()) {
+            return true
+        }
+        return withContext(Dispatchers.IO) {
+            DeviceIdManager.ensureDeviceSecret(this@BindActivity, secureStorage)
+        }
     }
 
     private fun setupViews() {
@@ -83,6 +99,7 @@ class BindActivity : AppCompatActivity() {
      * 密码绑定
      *
      * 修复：使用 getOrCreateDeviceId() 确保每次绑定使用相同 deviceId
+     * 携带 deviceSecret 供服务端密钥验证
      */
     private fun bindWithPassword(username: String, password: String, deviceName: String) {
         binding.btnBindPassword.isEnabled = false
@@ -90,13 +107,23 @@ class BindActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
+                // 确保设备码就绪
+                val secretReady = ensureDeviceSecretReady()
+                if (!secretReady) {
+                    binding.tvStatus.text = "获取设备码失败"
+                    binding.btnBindPassword.isEnabled = true
+                    return@launch
+                }
+
                 // 复用已有 deviceId（若有），否则生成新 ID
-                val deviceId = secureStorage.getOrCreateDeviceId(this@BindActivity)
+                val deviceId = secureStorage.getDeviceId() ?: secureStorage.getOrCreateDeviceId(this@BindActivity)
+                val deviceSecret = secureStorage.getDeviceSecret() ?: ""
                 val request = BindPasswordRequest(
                     username = username,
                     password = password,
                     deviceId = deviceId,
-                    deviceName = deviceName
+                    deviceName = deviceName,
+                    deviceSecret = deviceSecret
                 )
 
                 val response = RetrofitClient.apiService.bindWithPassword(request)
@@ -143,6 +170,7 @@ class BindActivity : AppCompatActivity() {
      * 登录后扫码绑定
      *
      * 修复：使用 getOrCreateDeviceId() 确保每次绑定使用相同 deviceId
+     * 携带 deviceSecret 供服务端密钥验证
      */
     private fun loginAndBindWithQrCode(pairCode: String, password: String, deviceName: String) {
         binding.btnBindQrCode.isEnabled = false
@@ -150,6 +178,14 @@ class BindActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
+                // 确保设备码就绪
+                val secretReady = ensureDeviceSecretReady()
+                if (!secretReady) {
+                    binding.tvStatus.text = "获取设备码失败"
+                    binding.btnBindQrCode.isEnabled = true
+                    return@launch
+                }
+
                 // 先获取用户名（假设用户也在输入框中输入了）
                 val username = binding.etUsername.text.toString().trim()
                 if (username.isEmpty()) {
@@ -159,12 +195,14 @@ class BindActivity : AppCompatActivity() {
                 }
 
                 // 复用已有 deviceId（若有），否则生成新 ID
-                val deviceId = secureStorage.getOrCreateDeviceId(this@BindActivity)
+                val deviceId = secureStorage.getDeviceId() ?: secureStorage.getOrCreateDeviceId(this@BindActivity)
+                val deviceSecret = secureStorage.getDeviceSecret() ?: ""
                 val bindRequest = BindPasswordRequest(
                     username = username,
                     password = password,
                     deviceId = deviceId,
-                    deviceName = deviceName
+                    deviceName = deviceName,
+                    deviceSecret = deviceSecret
                 )
 
                 val loginResponse = RetrofitClient.apiService.bindWithPassword(bindRequest)
@@ -180,7 +218,8 @@ class BindActivity : AppCompatActivity() {
                 val qrRequest = BindQrCodeRequest(
                     pairCode = pairCode,
                     deviceId = deviceId,
-                    deviceName = deviceName
+                    deviceName = deviceName,
+                    deviceSecret = deviceSecret
                 )
 
                 val qrResponse = RetrofitClient.apiService.bindWithQrCode(

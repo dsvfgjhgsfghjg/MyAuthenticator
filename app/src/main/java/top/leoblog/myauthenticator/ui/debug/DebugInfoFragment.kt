@@ -204,6 +204,19 @@ class DebugInfoFragment : Fragment() {
         // Username
         bindingView.findViewById<TextView>(R.id.tv_debug_username).text = username ?: "❌ 未设置"
 
+        // Profile 邮箱（从缓存读取）
+        val profileEmail = secureStorage.getProfileEmail()
+        bindingView.findViewById<TextView>(R.id.tv_debug_profile_email).text = profileEmail ?: "未获取"
+
+        // Profile 设备数（从缓存读取）
+        val profileDeviceCount = secureStorage.getProfileDeviceCount()
+        bindingView.findViewById<TextView>(R.id.tv_debug_profile_device_count).text =
+            if (profileDeviceCount >= 0) "$profileDeviceCount" else "未获取"
+
+        // Profile 头像URL（从缓存读取）
+        val profileAvatarUrl = secureStorage.getProfileAvatarUrl()
+        bindingView.findViewById<TextView>(R.id.tv_debug_profile_avatar_url).text = profileAvatarUrl ?: "未获取"
+
         // CipherPref
         bindingView.findViewById<TextView>(R.id.tv_debug_cipher_pref).text = cipherPref ?: "❌ 未设置（DH 握手未完成）"
 
@@ -695,6 +708,13 @@ class DebugInfoFragment : Fragment() {
         val reconnectCount = WebSocketService.getReconnectCount()
         val label = handshakeLabels[state] ?: state.name
 
+        // 读取缓存的 Profile 数据
+        val profileEmail = secureStorage.getProfileEmail()
+        val profileDeviceCount = secureStorage.getProfileDeviceCount()
+        val profileAvatarUrl = secureStorage.getProfileAvatarUrl()
+        val profileBoundAt = secureStorage.getProfileBoundAt()
+        val profileLastLoginAt = secureStorage.getProfileLastLoginAt()
+
         return buildString {
             appendLine("===== MyAuthenticator 调试信息 =====")
             appendLine("生成时间: ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())}")
@@ -707,6 +727,13 @@ class DebugInfoFragment : Fragment() {
             appendLine("CipherPref: ${cipherPref ?: "未设置"}")
             appendLine("握手状态: $label")
             appendLine("重连次数: $reconnectCount")
+            appendLine()
+            appendLine("--- Profile 数据（从 API 缓存） ---")
+            appendLine("邮箱: ${profileEmail ?: "未获取"}")
+            appendLine("设备数: ${if (profileDeviceCount >= 0) profileDeviceCount else "未获取"}")
+            appendLine("头像URL: ${profileAvatarUrl ?: "未获取"}")
+            appendLine("绑定时间: ${profileBoundAt ?: "未获取"}")
+            appendLine("最后登录: ${profileLastLoginAt ?: "未获取"}")
             appendLine()
             appendLine("--- 网络配置 ---")
             appendLine("环境: ${NetworkConfig.environment.name}")

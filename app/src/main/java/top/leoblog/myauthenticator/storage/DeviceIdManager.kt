@@ -2,29 +2,97 @@ package top.leoblog.myauthenticator.storage
 
 import android.content.Context
 import android.provider.Settings
+import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import top.leoblog.myauthenticator.model.DeviceSecretResponse
+import top.leoblog.myauthenticator.network.RetrofitClient
 import java.security.MessageDigest
 import java.util.UUID
 
 /**
- * 设备 ID 管理器 — 生成稳定唯一的设备特征码
+ * 设备码（Device Secret）管理器
  *
- * 对应 APP_DEVICE_FINGERPRINT_GUIDE.md 规范：
- * - 首次安装时生成，永久存储（SharedPreferences）
- * - 格式: ANDROID_MD5(ANDROID_ID+包名)前12位_随机8位
- * - 同一设备、同一用户不变，防止重复设备记录
+ * 对应 APP_DEVICE_SECRET_GUIDE.md 规范：
+ * 1. 设备码由服务端生成（deviceId 格式为 svr_<UUID>）
+ * 2. deviceSecret 为服务端下发的 32 字节随机密钥（64 位 hex 字符串）
+ * 3. 本地持久化存储，App 重启后复用
+ * 4. 如果本地存储丢失（首次安装 / 清除数据），调用 API 获取新设备码
  */
 object DeviceIdManager {
 
+    private const val TAG = "DeviceIdManager"
     private const val PREF_NAME = "device_id_prefs"
     private const val KEY_DEVICE_ID = "stable_device_id"
 
     /**
-     * 获取稳定的设备 ID
+     * 确保本地有设备码（deviceId + deviceSecret）。
+     * 如果没有，调用 POST /api/auth/app/device-secret 获取并存储。
      *
-     * 优先从 SharedPreferences 读取已保存的 ID。
-     * 如果不存在（首次安装），则生成并持久化。
+     * @param context Context
+     * @param secureStorage SecureStorage 实例（用于存储 deviceSecret）
+     * @return true 表示设备码已就绪，false 表示获取失败
+     */
+    suspend fun ensureDeviceSecret(context: Context, secureStorage: SecureStorage): Boolean {
+        // 1. 检查本地是否已有 deviceSecret
+        val existingSecret = secureStorage.getDeviceSecret()
+        if (!existingSecret.isNullOrBlank()) {
+            Log.d(TAG, "本地已有 deviceSecret，跳过获取")
+            // 如果 deviceId 在 SecureStorage 中不存在但 DeviceSecretManager 中有，同步一下
+            if (secureStorage.getDeviceId() == null) {
+                secureStorage.saveDeviceId(getOrCreateDeviceId(context))
+            }
+            return true
+        }
+
+        // 2. 本地没有，调用服务端 API 获取
+        return withContext(Dispatchers.IO) {
+            try {
+                val response = RetrofitClient.apiService.getDeviceSecret()
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    if (body?.code == 200 && body.data != null) {
+                        val data: DeviceSecretResponse = body.data
+                        // 存储服务端下发的 deviceId（svr_<UUID> 格式）
+                        secureStorage.saveDeviceId(data.deviceId)
+                        // 存储 deviceSecret
+                        secureStorage.saveDeviceSecret(data.deviceSecret)
+                        // 存储 hint（用于 UI 展示）
+                        secureStorage.saveDeviceSecretHint(data.hint)
+                        // 同步到本地持久化（旧兼容存储）
+                        saveDeviceIdCompat(context, data.deviceId)
+                        Log.d(TAG, "✅ 设备码获取成功: deviceId=${data.deviceId}, hint=${data.hint}")
+                        true
+                    } else {
+                        Log.e(TAG, "设备码获取失败: code=${body?.code}, message=${body?.message}")
+                        false
+                    }
+                } else {
+                    Log.e(TAG, "设备码获取 HTTP 失败: ${response.code()}")
+                    false
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "设备码获取异常: ${e.message}")
+                false
+            }
+        }
+    }
+
+    /**
+     * 获取设备码是否已就绪
+     */
+    fun hasDeviceSecret(secureStorage: SecureStorage): Boolean {
+        return !secureStorage.getDeviceSecret().isNullOrBlank()
+            && !secureStorage.getDeviceId().isNullOrBlank()
+    }
+
+    /**
+     * 获取稳定的设备 ID（客户端生成，保留兼容）
      *
-     * 返回格式示例: "ANDROID_a3f8b2c1d4e5_5237ba0e"
+     * 如果服务端 deviceId 已存在（svr_ 前缀），优先返回服务端的。
+     * 否则使用旧方案生成客户端 ID。
+     *
+     * 返回格式示例: "svr_a1b2c3d4e5f6..." 或 "ANDROID_a3f8b2c1d4e5_5237ba0e"
      */
     fun getOrCreateDeviceId(context: Context): String {
         val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
@@ -35,7 +103,7 @@ object DeviceIdManager {
             return existingId
         }
 
-        // 2. 首次安装：生成新的 deviceId
+        // 2. 首次安装：生成新的 deviceId（客户端生成方案，兼容旧版）
         val androidId = Settings.Secure.getString(
             context.contentResolver,
             Settings.Secure.ANDROID_ID
@@ -53,16 +121,22 @@ object DeviceIdManager {
 
         val deviceId = "ANDROID_${hash}_${randomSuffix}"
 
-        // 3. 持久化存储（关键！）
+        // 3. 持久化存储
         prefs.edit().putString(KEY_DEVICE_ID, deviceId).apply()
 
         return deviceId
     }
 
     /**
+     * 保存服务端下发的 deviceId 到兼容存储
+     */
+    private fun saveDeviceIdCompat(context: Context, deviceId: String) {
+        val prefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        prefs.edit().putString(KEY_DEVICE_ID, deviceId).apply()
+    }
+
+    /**
      * 获取设备名称（用于显示）
-     *
-     * 返回格式示例: "Pixel 7 Pro" 或 "Samsung Galaxy S24"
      */
     fun getDeviceName(): String {
         val manufacturer = android.os.Build.MANUFACTURER

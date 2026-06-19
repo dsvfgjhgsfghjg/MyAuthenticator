@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger
 class AppWebSocketClient(
     private val token: String,
     private val deviceId: String,
+    private val deviceSecret: String,
     private val listener: WebSocketListenerCallback
 ) {
     companion object {
@@ -206,7 +207,12 @@ class AppWebSocketClient(
     private fun sendBindMessage() {
         Log.d(TAG, "📤 发送 bind 消息")
         Log.d(TAG, "   deviceId: $deviceId")
-        val message = BindMessage(token = token, deviceId = deviceId)
+        Log.d(TAG, "   deviceSecret 前缀: ${deviceSecret.take(8)}...")
+        val message = BindMessage(
+            token = token,
+            deviceId = deviceId,
+            deviceSecret = deviceSecret
+        )
         val json = gson.toJson(message)
         val sent = webSocket?.send(json) ?: false
         if (!sent) {

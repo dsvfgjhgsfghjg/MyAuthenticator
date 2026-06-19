@@ -4,6 +4,8 @@ import com.google.gson.annotations.SerializedName
 
 /**
  * WebSocket bind 消息
+ *
+ * 对应 APP_DEVICE_SECRET_GUIDE.md 增强验证流程
  */
 data class BindMessage(
     @SerializedName("type")
@@ -11,7 +13,9 @@ data class BindMessage(
     @SerializedName("token")
     val token: String,
     @SerializedName("deviceId")
-    val deviceId: String
+    val deviceId: String,
+    @SerializedName("deviceSecret")
+    val deviceSecret: String = ""
 )
 
 /**

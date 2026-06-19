@@ -1,13 +1,13 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older than API 31
-   See https://developer.android.com/about/versions/12/backup-restore
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   备份规则配置 — 配合 Android Auto Backup 实现卸载重装后自动恢复数据
+   详见 https://developer.android.com/guide/topics/data/autobackup
+   注意：此文件在 API 31+ 设备上配合 data_extraction_rules.xml 使用
 -->
 <full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+   <!-- 备份 SecureStorage 的 prefs（Token、Username、Profile 缓存等） -->
+   <include domain="sharedpref" path="app_auth_prefs_v2.xml" />
+
+   <!-- 备份 DeviceIdManager 的 prefs（设备 ID） -->
+   <include domain="sharedpref" path="device_id_prefs.xml" />
 </full-backup-content>

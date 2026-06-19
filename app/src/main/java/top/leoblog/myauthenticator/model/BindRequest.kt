@@ -3,6 +3,20 @@ package top.leoblog.myauthenticator.model
 import com.google.gson.annotations.SerializedName
 
 /**
+ * 设备码生成响应 POST /api/auth/app/device-secret
+ *
+ * 对应 APP_DEVICE_SECRET_GUIDE.md
+ */
+data class DeviceSecretResponse(
+    @SerializedName("deviceId")
+    val deviceId: String,           // "svr_<UUID>"
+    @SerializedName("deviceSecret")
+    val deviceSecret: String,       // 64 位 hex 字符串
+    @SerializedName("hint")
+    val hint: String                // "a3f8...e5d6"
+)
+
+/**
  * 密码绑定请求
  */
 data class BindPasswordRequest(
@@ -15,7 +29,9 @@ data class BindPasswordRequest(
     @SerializedName("deviceName")
     val deviceName: String,
     @SerializedName("deviceType")
-    val deviceType: String = "ANDROID"
+    val deviceType: String = "ANDROID",
+    @SerializedName("deviceSecret")
+    val deviceSecret: String = ""
 )
 
 /**
@@ -27,7 +43,9 @@ data class BindQrCodeRequest(
     @SerializedName("deviceId")
     val deviceId: String,
     @SerializedName("deviceName")
-    val deviceName: String
+    val deviceName: String,
+    @SerializedName("deviceSecret")
+    val deviceSecret: String = ""
 )
 
 /**

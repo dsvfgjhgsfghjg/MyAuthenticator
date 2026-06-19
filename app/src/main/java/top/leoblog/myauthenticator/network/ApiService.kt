@@ -10,6 +10,15 @@ import top.leoblog.myauthenticator.model.*
 interface ApiService {
 
     /**
+     * 0.1 生成设备码（不需要认证）
+     *
+     * 对应 APP_DEVICE_SECRET_GUIDE.md
+     */
+    @POST("/api/auth/app/device-secret")
+    suspend fun getDeviceSecret(
+    ): Response<ApiResponse<DeviceSecretResponse>>
+
+    /**
      * 4.1 密码绑定
      */
     @POST("/api/auth/app/bind")

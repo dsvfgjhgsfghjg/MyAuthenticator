@@ -45,6 +45,30 @@
                         <TextView android:id="@+id/tv_debug_username" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textSize="13sp" />
                     </LinearLayout>
 
+                    <!-- Profile 邮箱 -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:paddingVertical="6dp">
+
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="Profile 邮箱" android:textStyle="bold" />
+
+                        <TextView android:id="@+id/tv_debug_profile_email" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- Profile 设备数 -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:paddingVertical="6dp">
+
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="Profile 设备数" android:textStyle="bold" />
+
+                        <TextView android:id="@+id/tv_debug_profile_device_count" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textSize="13sp" />
+                    </LinearLayout>
+
+                    <!-- Profile 头像URL -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:paddingVertical="6dp">
+
+                        <TextView android:layout_width="100dp" android:layout_height="wrap_content" android:text="Profile 头像" android:textStyle="bold" />
+
+                        <TextView android:id="@+id/tv_debug_profile_avatar_url" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="-" android:textSize="13sp" android:maxLines="2" android:ellipsize="end" />
+                    </LinearLayout>
+
                     <!-- CipherPref -->
                     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal" android:paddingVertical="6dp">
 

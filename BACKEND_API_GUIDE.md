@@ -120,8 +120,8 @@ Authorization: Bearer <jwt_token>
 | 2.4 | GET | `/api/auth/app/status` | ✅ | ✅ 已实现 |
 | 2.5 | GET | `/api/auth/app/devices` | ✅ | ✅ 已实现 |
 | 2.6 | DELETE | `/api/auth/app/devices/{deviceId}` | ✅ | ✅ 已实现 |
-| 2.7 | GET | `/api/user/profile` | ✅ | 📋 计划新增 |
-| 2.8 | GET | `/api/auth/history` | ✅ | 📋 计划新增 |
+| 2.7 | GET | `/api/user/profile` | ✅ | ✅ 已实现 |
+| 2.8 | GET | `/api/auth/history` | ✅ | ✅ 已实现 |
 
 ---
 

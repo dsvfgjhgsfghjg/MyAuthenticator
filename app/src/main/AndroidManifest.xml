@@ -13,27 +13,40 @@
     <!-- 通知权限（Android 13+） -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- AccountManager 权限（自家 authenticator 不需要用户弹窗，只在清单声明即可） -->
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
+    <uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+
     <application android:name=".MyAuthenticatorApp" android:allowBackup="true" android:dataExtractionRules="@xml/data_extraction_rules" android:fullBackupContent="@xml/backup_rules" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:roundIcon="@mipmap/ic_launcher_round" android:supportsRtl="true" android:theme="@style/Theme.MyAuthenticator" android:usesCleartextTraffic="true" tools:targetApi="33">
 
-        <!-- 登录 Activity（入口） -->
-        <activity android:name=".ui.login.LoginActivity" android:exported="true" android:theme="@style/Theme.MyAuthenticator" android:windowSoftInputMode="adjustResize">
+        <!-- 主 Activity（入口） — 始终显示主视图，登录后自动重连 -->
+        <activity android:name=".ui.main.MainActivity" android:exported="true" android:theme="@style/Theme.MyAuthenticator" android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <!-- 登录 Activity（用户点击"登录"时打开） -->
+        <activity android:name=".ui.login.LoginActivity" android:exported="false" android:theme="@style/Theme.MyAuthenticator" android:windowSoftInputMode="adjustResize" />
+
         <!-- 绑定 Activity -->
         <activity android:name=".ui.bind.BindActivity" android:exported="false" android:theme="@style/Theme.MyAuthenticator" android:windowSoftInputMode="adjustResize" />
-
-        <!-- 主 Activity -->
-        <activity android:name=".ui.main.MainActivity" android:exported="false" android:theme="@style/Theme.MyAuthenticator" android:windowSoftInputMode="adjustResize" />
 
         <!-- 设置 Activity -->
         <activity android:name=".ui.settings.SettingsActivity" android:exported="false" android:theme="@style/Theme.MyAuthenticator" />
 
         <!-- WebSocket 前台服务 -->
         <service android:name=".service.WebSocketService" android:foregroundServiceType="remoteMessaging" android:exported="false" />
+
+        <!-- AccountAuthenticator（系统级持久化账号，卸载重装后数据仍保留） -->
+        <service android:name=".authenticator.AuthenticatorService" android:exported="false">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator" />
+            </intent-filter>
+            <meta-data android:name="android.accounts.AccountAuthenticator" android:resource="@xml/authenticator" />
+        </service>
 
     </application>
 

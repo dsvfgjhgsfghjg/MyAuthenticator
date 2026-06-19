@@ -10,6 +10,7 @@ import top.leoblog.myauthenticator.R
 import top.leoblog.myauthenticator.databinding.ActivityLoginBinding
 import top.leoblog.myauthenticator.model.BindPasswordRequest
 import top.leoblog.myauthenticator.network.RetrofitClient
+import top.leoblog.myauthenticator.storage.DeviceIdManager
 import top.leoblog.myauthenticator.storage.SecureStorage
 import top.leoblog.myauthenticator.ui.main.MainActivity
 
@@ -59,8 +60,19 @@ class LoginActivity : AppCompatActivity() {
     }
 
     /**
-     * 调用密码绑定 API 完成登录 + 设备绑定
+     * 确保设备码就绪，若本地没有则调用服务端 API 获取
+     * @return true 表示设备码已就绪，false 表示获取失败
      */
+    private suspend fun ensureDeviceSecretReady(): Boolean {
+        // 先检查本地是否已有 deviceSecret
+        val existingSecret = secureStorage.getDeviceSecret()
+        if (!existingSecret.isNullOrBlank()) {
+            return true
+        }
+        // 本地没有，调用 API 获取
+        return DeviceIdManager.ensureDeviceSecret(this@LoginActivity, secureStorage)
+    }
+
     private fun login(username: String, password: String, deviceName: String) {
         binding.btnLogin.isEnabled = false
         binding.tvStatus.text = "正在登录并绑定设备..."
@@ -68,12 +80,23 @@ class LoginActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                val deviceId = SecureStorage.generateDeviceId(this@LoginActivity)
+                // 先确保设备码就绪
+                val secretReady = ensureDeviceSecretReady()
+                if (!secretReady) {
+                    binding.tvStatus.text = "获取设备码失败"
+                    binding.tvErrorDetail.text = "无法获取设备码，请检查网络连接"
+                    binding.btnLogin.isEnabled = true
+                    return@launch
+                }
+
+                val deviceId = secureStorage.getDeviceId() ?: SecureStorage.generateDeviceId(this@LoginActivity)
+                val deviceSecret = secureStorage.getDeviceSecret() ?: ""
                 val request = BindPasswordRequest(
                     username = username,
                     password = password,
                     deviceId = deviceId,
-                    deviceName = deviceName
+                    deviceName = deviceName,
+                    deviceSecret = deviceSecret
                 )
 
                 val response = RetrofitClient.apiService.bindWithPassword(request)
