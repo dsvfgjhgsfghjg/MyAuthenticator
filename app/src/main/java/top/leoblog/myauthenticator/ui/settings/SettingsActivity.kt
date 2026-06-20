@@ -1,13 +1,18 @@
 package top.leoblog.myauthenticator.ui.settings
 
+import android.content.DialogInterface
 import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.Spinner
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.biometric.BiometricManager
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 import top.leoblog.myauthenticator.R
 import top.leoblog.myauthenticator.databinding.ActivitySettingsBinding
@@ -21,15 +26,17 @@ import top.leoblog.myauthenticator.service.WebSocketService
 import top.leoblog.myauthenticator.storage.SecureStorage
 import top.leoblog.myauthenticator.ui.bind.BindActivity
 import top.leoblog.myauthenticator.ui.challenge.ChallengeDialogFragment
+import top.leoblog.myauthenticator.ui.lock.LockManager
+import top.leoblog.myauthenticator.ui.lock.UnlockActivity
 
 /**
- * 设置 Activity — 连接状态、设备信息、操作按钮，
- * 并支持切换设备首选加密算法（AES-256-GCM / SM4-GCM）。
+ * 设置 Activity — 连接状态、设备信息、操作按钮、应用锁配置。
  */
 class SettingsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySettingsBinding
     private lateinit var secureStorage: SecureStorage
+    private lateinit var lockManager: LockManager
     private var isConnected = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,6 +45,7 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         secureStorage = SecureStorage(this)
+        lockManager = LockManager(secureStorage)
 
         setupViews()
 
@@ -112,19 +120,241 @@ class SettingsActivity : AppCompatActivity() {
             stopWebSocketService()
             finishAffinity()
         }
+
+        // ---- App Lock 配置 ----
+        setupAppLockViews()
+    }
+
+    private fun setupAppLockViews() {
+        val isLockEnabled = secureStorage.isLockEnabled()
+        binding.switchLock.isChecked = isLockEnabled
+        binding.tvLockStatus.text = if (isLockEnabled) "已开启" else "已关闭"
+
+        // 更新 PIN / 指纹等选项可见性
+        updateLockOptionVisibility(isLockEnabled)
+
+        // 应用锁开关
+        binding.switchLock.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                // 开启应用锁：需先设置 PIN
+                if (!secureStorage.hasPin()) {
+                    showSetupPinDialog {
+                        secureStorage.setLockEnabled(true)
+                        updateLockOptionVisibility(true)
+                        binding.switchLock.isChecked = true
+                        binding.tvLockStatus.text = "已开启"
+                        Toast.makeText(this, R.string.pin_set_success, Toast.LENGTH_SHORT).show()
+                    }
+                    // 如果取消设置 PIN，开关会被回调恢复
+                    binding.switchLock.isChecked = false
+                } else {
+                    secureStorage.setLockEnabled(true)
+                    binding.tvLockStatus.text = "已开启"
+                    updateLockOptionVisibility(true)
+                }
+            } else {
+                // 关闭应用锁：需验证当前 PIN
+                showVerifyPinDialog {
+                    secureStorage.setLockEnabled(false)
+                    secureStorage.setBiometricEnabled(false)
+                    binding.tvLockStatus.text = "已关闭"
+                    updateLockOptionVisibility(false)
+                    Toast.makeText(this, "应用锁已关闭", Toast.LENGTH_SHORT).show()
+                }
+                // 如果取消验证，恢复开关
+                binding.switchLock.isChecked = true
+            }
+        }
+
+        // 修改 PIN
+        binding.btnChangePin.setOnClickListener {
+            showChangePinDialog()
+        }
+
+        // 指纹解锁开关
+        binding.switchBiometric.isChecked = secureStorage.isBiometricEnabled()
+        binding.switchBiometric.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                // 检查设备是否支持指纹
+                val biometricManager = BiometricManager.from(this)
+                when (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)) {
+                    BiometricManager.BIOMETRIC_SUCCESS -> {
+                        secureStorage.setBiometricEnabled(true)
+                    }
+                    BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> {
+                        binding.switchBiometric.isChecked = false
+                        Toast.makeText(this, R.string.lock_biometric_not_available, Toast.LENGTH_SHORT).show()
+                    }
+                    BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> {
+                        binding.switchBiometric.isChecked = false
+                        Toast.makeText(this, R.string.lock_biometric_not_enrolled, Toast.LENGTH_SHORT).show()
+                    }
+                    else -> {
+                        binding.switchBiometric.isChecked = false
+                        Toast.makeText(this, R.string.lock_biometric_not_available, Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } else {
+                secureStorage.setBiometricEnabled(false)
+            }
+        }
+
+        // 超时设置
+        val timeoutSeconds = secureStorage.getLockTimeoutSeconds()
+        binding.spinnerTimeout.setSelection(getTimeoutPosition(timeoutSeconds))
+        binding.spinnerTimeout.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
+                val seconds = when (pos) {
+                    1 -> 30
+                    2 -> 60
+                    3 -> 300
+                    else -> 0
+                }
+                secureStorage.setLockTimeoutSeconds(seconds)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
+    }
+
+    private fun getTimeoutPosition(seconds: Int): Int {
+        return when (seconds) {
+            30 -> 1
+            60 -> 2
+            300 -> 3
+            else -> 0
+        }
+    }
+
+    private fun updateLockOptionVisibility(lockEnabled: Boolean) {
+        val visibility = if (lockEnabled) View.VISIBLE else View.GONE
+        binding.lockOptionsGroup.visibility = visibility
+        binding.tvLockStatus.visibility = if (lockEnabled) View.VISIBLE else View.GONE
+
+        if (lockEnabled) {
+            binding.btnChangePin.text = if (secureStorage.hasPin())
+                getString(R.string.lock_change_pin)
+            else
+                getString(R.string.lock_set_pin)
+        }
     }
 
     /**
-     * 设置加密算法下拉框
+     * 设置 PIN 对话框（初次设置）
      */
+    private fun showSetupPinDialog(onSuccess: () -> Unit) {
+        val inflater = layoutInflater
+        val dialogView = inflater.inflate(R.layout.dialog_pin_setup, null)
+        val etNewPin = dialogView.findViewById<TextInputEditText>(R.id.et_new_pin)
+        val etConfirmPin = dialogView.findViewById<TextInputEditText>(R.id.et_confirm_pin)
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.pin_dialog_title)
+            .setView(dialogView)
+            .setPositiveButton(R.string.btn_confirm, null)
+            .setNegativeButton(R.string.btn_cancel, null)
+            .show().apply {
+                // Override positive button to prevent auto-dismiss on validation failure
+                getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener {
+                    val newPin = etNewPin.text.toString().trim()
+                    val confirmPin = etConfirmPin.text.toString().trim()
+
+                    if (newPin.length < 4) {
+                        etNewPin.error = getString(R.string.pin_error_too_short)
+                        return@setOnClickListener
+                    }
+
+                    if (newPin != confirmPin) {
+                        etConfirmPin.error = getString(R.string.pin_error_mismatch)
+                        return@setOnClickListener
+                    }
+
+                    lockManager.setPin(newPin)
+                    onSuccess()
+                    dismiss()
+                }
+            }
+    }
+
+    /**
+     * 验证 PIN 对话框
+     */
+    private fun showVerifyPinDialog(onSuccess: () -> Unit) {
+        val inflater = layoutInflater
+        val dialogView = inflater.inflate(R.layout.dialog_pin_verify, null)
+        val etOldPin = dialogView.findViewById<TextInputEditText>(R.id.et_old_pin)
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.pin_dialog_old)
+            .setView(dialogView)
+            .setPositiveButton(R.string.btn_confirm, null)
+            .setNegativeButton(R.string.btn_cancel, null)
+            .show().apply {
+                getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener {
+                    val oldPin = etOldPin.text.toString().trim()
+
+                    if (!lockManager.verifyPin(oldPin)) {
+                        etOldPin.error = getString(R.string.pin_error_invalid)
+                        return@setOnClickListener
+                    }
+
+                    onSuccess()
+                    dismiss()
+                }
+            }
+    }
+
+    /**
+     * 修改 PIN 对话框
+     */
+    private fun showChangePinDialog() {
+        val inflater = layoutInflater
+        val dialogView = inflater.inflate(R.layout.dialog_pin_change, null)
+        val etOldPin = dialogView.findViewById<TextInputEditText>(R.id.et_old_pin)
+        val etNewPin = dialogView.findViewById<TextInputEditText>(R.id.et_new_pin)
+        val etConfirmPin = dialogView.findViewById<TextInputEditText>(R.id.et_confirm_pin)
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.lock_change_pin)
+            .setView(dialogView)
+            .setPositiveButton(R.string.btn_confirm, null)
+            .setNegativeButton(R.string.btn_cancel, null)
+            .show().apply {
+                getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener {
+                    val oldPin = etOldPin.text.toString().trim()
+                    val newPin = etNewPin.text.toString().trim()
+                    val confirmPin = etConfirmPin.text.toString().trim()
+
+                    if (!lockManager.verifyPin(oldPin)) {
+                        etOldPin.error = getString(R.string.pin_error_invalid)
+                        return@setOnClickListener
+                    }
+
+                    if (newPin.length < 4) {
+                        etNewPin.error = getString(R.string.pin_error_too_short)
+                        return@setOnClickListener
+                    }
+
+                    if (newPin != confirmPin) {
+                        etConfirmPin.error = getString(R.string.pin_error_mismatch)
+                        return@setOnClickListener
+                    }
+
+                    lockManager.setPin(newPin)
+                    Toast.makeText(this@SettingsActivity, R.string.pin_changed_success, Toast.LENGTH_SHORT).show()
+                    dismiss()
+                }
+            }
+    }
+
+    // ---- 以下为原有代码，未改动 ---- //
+
     private fun setupCipherSpinner(currentCipher: String?) {
         val spinner = binding.spinnerCipher
 
-        // 根据当前算法设置选中位置
         val position = getCipherPosition(currentCipher)
         spinner.setSelection(position)
 
-        // 监听选择变更，调用 API 更新服务端
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
                 val selected = resources.getStringArray(R.array.cipher_options)[pos]
@@ -133,11 +363,9 @@ class SettingsActivity : AppCompatActivity() {
                 val deviceId = secureStorage.getDeviceId() ?: return
                 val token = secureStorage.getToken() ?: return
 
-                // 先乐观更新本地
                 secureStorage.saveCipherPref(selected)
                 binding.tvCipher.text = "加密算法: $selected"
 
-                // 同步到服务端
                 lifecycleScope.launch {
                     try {
                         val response = RetrofitClient.apiService.updateCipherPref(
@@ -162,9 +390,6 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * 获取加密算法在 Spinner 中的位置
-     */
     private fun getCipherPosition(cipher: String?): Int {
         return when (cipher) {
             "AES-256-GCM" -> 0

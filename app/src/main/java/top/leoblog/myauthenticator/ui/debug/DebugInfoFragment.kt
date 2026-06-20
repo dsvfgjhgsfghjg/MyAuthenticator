@@ -18,7 +18,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import top.leoblog.myauthenticator.R
+import top.leoblog.myauthenticator.crypto.AesGcmCrypto
+import top.leoblog.myauthenticator.crypto.KeyDerivation
 import top.leoblog.myauthenticator.crypto.LogCompressor
+import top.leoblog.myauthenticator.crypto.Sm4GcmCrypto
 import top.leoblog.myauthenticator.model.AuthResultMessage
 import top.leoblog.myauthenticator.model.ChallengeMessage
 import top.leoblog.myauthenticator.network.AppWebSocketClient
@@ -29,7 +32,9 @@ import top.leoblog.myauthenticator.service.ChallengeCallback
 import top.leoblog.myauthenticator.service.HandshakeCallback
 import top.leoblog.myauthenticator.service.WebSocketService
 import top.leoblog.myauthenticator.storage.SecureStorage
+import java.security.SecureRandom
 import java.text.SimpleDateFormat
+import java.util.Base64
 import java.util.Date
 import java.util.Locale
 
@@ -167,6 +172,16 @@ class DebugInfoFragment : Fragment() {
             logBuffer.clear()
             bindingView.findViewById<TextView>(R.id.tv_debug_logs).text = "暂无日志"
             addLog("INFO", "日志已清空")
+        }
+
+        // 加密自测（使用当前首选算法）
+        bindingView.findViewById<Button>(R.id.btn_test_cipher_self).setOnClickListener {
+            testCipherSelfTest()
+        }
+
+        // 算法遍历（测试全部4种算法）
+        bindingView.findViewById<Button>(R.id.btn_test_all_ciphers).setOnClickListener {
+            testAllCiphers()
         }
 
         // 刷新状态
@@ -518,6 +533,132 @@ class DebugInfoFragment : Fragment() {
                 showApiResult("❌ 网络异常: ${e.message}")
                 addLog("ERROR", "调试会话 API 异常: ${e.message}")
             }
+        }
+    }
+
+    // ==================== 加密算法本地自测 ====================
+
+    /**
+     * 加密自测：使用当前首选算法做加解密往返测试
+     *
+     * 根据 cipherPref 获取算法，生成随机密钥，对固定明文做
+     * 加密 → 解密 往返，验证结果一致性，输出详细调试日志。
+     */
+    private fun testCipherSelfTest() {
+        val cipherAlgo = secureStorage.getCipherPref()
+        if (cipherAlgo == null) {
+            showApiResult("❌ CipherPref 未设置，请先完成 WebSocket DH 握手")
+            addLog("ERROR", "加密自测失败: CipherPref 为空")
+            return
+        }
+
+        addLog("INFO", "═══ 加密自测 ═══")
+        addLog("INFO", "算法: $cipherAlgo")
+        runSingleCipherTest(cipherAlgo)
+    }
+
+    /**
+     * 算法遍历：依次测试全部4种算法的加解密往返
+     */
+    private fun testAllCiphers() {
+        val algorithms = listOf("AES-256-GCM", "AES-192-GCM", "AES-128-GCM", "SM4-GCM")
+        addLog("INFO", "═══ 算法遍历 ═══")
+
+        var passed = 0
+        var failed = 0
+
+        for (algo in algorithms) {
+            val result = runSingleCipherTest(algo)
+            if (result) passed++ else failed++
+        }
+
+        val summary = "✅ 通过: $passed, ❌ 失败: $failed, 共: ${algorithms.size}"
+        addLog("INFO", "═══ 遍历结果: $summary ═══")
+        showApiResult(summary)
+    }
+
+    /**
+     * 对指定算法执行单次加解密往返测试
+     *
+     * @param cipherAlgo 算法名称（AES-256-GCM / AES-192-GCM / AES-128-GCM / SM4-GCM）
+     * @return true 表示测试通过，false 表示失败
+     */
+    private fun runSingleCipherTest(cipherAlgo: String): Boolean {
+        val plaintext = "MyAuthenticator Cipher Self-Test ${Date()}"
+        val plaintextBytes = plaintext.toByteArray(Charsets.UTF_8)
+
+        // 1. 确定 keySize
+        val keySize = when (cipherAlgo) {
+            "AES-128-GCM" -> 128
+            "AES-192-GCM" -> 192
+            "AES-256-GCM" -> 256
+            "SM4-GCM" -> 128
+            else -> {
+                addLog("ERROR", "未知算法: $cipherAlgo")
+                showApiResult("❌ 未知算法: $cipherAlgo")
+                return false
+            }
+        }
+
+        // 2. 生成随机密钥
+        val key = ByteArray(keySize / 8).also { SecureRandom().nextBytes(it) }
+        val keyB64 = Base64.getEncoder().encodeToString(key)
+
+        addLog("INFO", "--- $cipherAlgo 测试 ---")
+        addLog("INFO", "密钥长度: ${keySize}bit (${key.size}B)")
+        addLog("INFO", "密钥(Base64): ${keyB64.take(24)}...")
+        addLog("INFO", "明文: $plaintext")
+
+        try {
+            // 3. 生成 IV 并加密
+            val iv = when (cipherAlgo) {
+                "AES-256-GCM", "AES-192-GCM", "AES-128-GCM" -> AesGcmCrypto.generateIv()
+                "SM4-GCM" -> Sm4GcmCrypto.generateIv()
+                else -> throw IllegalStateException("不支持的算法: $cipherAlgo")
+            }
+            val ivB64 = Base64.getEncoder().encodeToString(iv)
+            addLog("INFO", "IV(Base64): ${ivB64.take(24)}...")
+
+            val encryptStart = System.nanoTime()
+            val encryptedBytes = when (cipherAlgo) {
+                "AES-256-GCM", "AES-192-GCM", "AES-128-GCM" ->
+                    AesGcmCrypto.encrypt(key, iv, plaintextBytes)
+                "SM4-GCM" -> Sm4GcmCrypto.encrypt(key, iv, plaintextBytes)
+                else -> throw IllegalStateException("不支持的算法: $cipherAlgo")
+            }
+            val encryptTime = (System.nanoTime() - encryptStart) / 1_000_000
+            val encryptedB64 = Base64.getEncoder().encodeToString(encryptedBytes)
+            addLog("INFO", "密文(Base64): ${encryptedB64.take(24)}... (${encryptedBytes.size}B)")
+            addLog("INFO", "加密耗时: ${encryptTime}ms")
+
+            // 4. 解密
+            val decryptStart = System.nanoTime()
+            val decryptedBytes = when (cipherAlgo) {
+                "AES-256-GCM", "AES-192-GCM", "AES-128-GCM" ->
+                    AesGcmCrypto.decrypt(key, iv, encryptedBytes)
+                "SM4-GCM" -> Sm4GcmCrypto.decrypt(key, iv, encryptedBytes)
+                else -> throw IllegalStateException("不支持的算法: $cipherAlgo")
+            }
+            val decryptTime = (System.nanoTime() - decryptStart) / 1_000_000
+            val decryptedText = String(decryptedBytes, Charsets.UTF_8)
+            addLog("INFO", "解密耗时: ${decryptTime}ms")
+
+            // 5. 验证一致性
+            val match = plaintextBytes.contentEquals(decryptedBytes)
+            if (match) {
+                addLog("INFO", "✅ $cipherAlgo 测试通过（明文一致）")
+                showApiResult("✅ $cipherAlgo 测试通过\n加密: ${encryptTime}ms, 解密: ${decryptTime}ms")
+            } else {
+                addLog("ERROR", "❌ $cipherAlgo 测试失败（解密结果与明文不符）")
+                addLog("ERROR", "   解密内容: $decryptedText")
+                showApiResult("❌ $cipherAlgo 测试失败: 解密结果与明文不符")
+            }
+
+            return match
+        } catch (e: Exception) {
+            addLog("ERROR", "❌ $cipherAlgo 测试异常: ${e.message}")
+            showApiResult("❌ $cipherAlgo 异常: ${e.message}")
+            return false
         }
     }
 

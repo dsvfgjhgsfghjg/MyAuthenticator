@@ -9,6 +9,12 @@
     <color name="profile_text_secondary">#8B7E8C</color>
     <color name="profile_divider">#D6B0BD</color>
 
+    <!-- CLANNAD 竹青色系 - 新增 -->
+    <color name="clannad_navigator">#F3E4E9</color>
+    <color name="clannad_dialog">#F3D1DF</color>
+    <color name="clannad_dashboard">#F1E1C8</color>
+    <color name="clannad_card">#D6B0BD</color>
+
     <!-- 认证状态颜色 -->
     <color name="status_approved">#4CAF50</color>
     <color name="status_rejected">#F44336</color>

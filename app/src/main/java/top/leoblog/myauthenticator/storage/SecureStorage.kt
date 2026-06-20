@@ -31,11 +31,18 @@ class SecureStorage(context: Context) {
         private const val KEY_CIPHER_PREF = "cipher_pref"
         private const val KEY_USER_ID = "user_id"
         private const val KEY_USERNAME = "username"
+        private const val KEY_NICKNAME = "nickname"
         private const val KEY_PROFILE_EMAIL = "profile_email"
         private const val KEY_PROFILE_DEVICE_COUNT = "profile_device_count"
         private const val KEY_PROFILE_AVATAR_URL = "profile_avatar_url"
         private const val KEY_PROFILE_BOUND_AT = "profile_bound_at"
         private const val KEY_PROFILE_LAST_LOGIN_AT = "profile_last_login_at"
+
+        // App Lock keys
+        private const val KEY_LOCK_ENABLED = "lock_enabled"
+        private const val KEY_PIN_HASH = "pin_hash"
+        private const val KEY_BIOMETRIC_ENABLED = "biometric_enabled"
+        private const val KEY_LOCK_TIMEOUT_SECONDS = "lock_timeout_seconds"
 
         /**
          * 生成设备唯一 ID（旧方案，保留兼容）
@@ -154,6 +161,16 @@ class SecureStorage(context: Context) {
         return sharedPreferences.getString(KEY_USERNAME, null)
     }
 
+    // ---- Nickname ----
+
+    fun saveNickname(nickname: String) {
+        sharedPreferences.edit().putString(KEY_NICKNAME, nickname).apply()
+    }
+
+    fun getNickname(): String? {
+        return sharedPreferences.getString(KEY_NICKNAME, null)
+    }
+
     // ---- Profile 数据缓存（用于调试页面展示） ----
 
     fun saveProfileEmail(email: String) {
@@ -217,5 +234,43 @@ class SecureStorage(context: Context) {
 
     fun clearAll() {
         sharedPreferences.edit().clear().apply()
+    }
+
+    // ---- App Lock (应用锁) ----
+
+    fun isLockEnabled(): Boolean {
+        return sharedPreferences.getBoolean(KEY_LOCK_ENABLED, false)
+    }
+
+    fun setLockEnabled(enabled: Boolean) {
+        sharedPreferences.edit().putBoolean(KEY_LOCK_ENABLED, enabled).apply()
+    }
+
+    fun savePinHash(hash: String) {
+        sharedPreferences.edit().putString(KEY_PIN_HASH, hash).apply()
+    }
+
+    fun getPinHash(): String? {
+        return sharedPreferences.getString(KEY_PIN_HASH, null)
+    }
+
+    fun hasPin(): Boolean {
+        return !getPinHash().isNullOrBlank()
+    }
+
+    fun isBiometricEnabled(): Boolean {
+        return sharedPreferences.getBoolean(KEY_BIOMETRIC_ENABLED, false)
+    }
+
+    fun setBiometricEnabled(enabled: Boolean) {
+        sharedPreferences.edit().putBoolean(KEY_BIOMETRIC_ENABLED, enabled).apply()
+    }
+
+    fun getLockTimeoutSeconds(): Int {
+        return sharedPreferences.getInt(KEY_LOCK_TIMEOUT_SECONDS, 0) // 0 = immediately
+    }
+
+    fun setLockTimeoutSeconds(seconds: Int) {
+        sharedPreferences.edit().putInt(KEY_LOCK_TIMEOUT_SECONDS, seconds).apply()
     }
 }

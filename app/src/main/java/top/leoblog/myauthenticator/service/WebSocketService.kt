@@ -91,6 +91,32 @@ class WebSocketService : Service() {
         // 握手状态回调（调试用）
         var handshakeCallback: HandshakeCallback? = null
 
+        // 缓存的挑战（Activity 在后台时收到的推送，等前台后弹窗）
+        @Volatile
+        var pendingChallenge: ChallengeMessage? = null
+            private set
+        @Volatile
+        var pendingAuthResult: AuthResultMessage? = null
+            private set
+
+        /**
+         * 消费并清空缓存的挑战
+         */
+        fun consumePendingChallenge(): ChallengeMessage? {
+            val c = pendingChallenge
+            pendingChallenge = null
+            return c
+        }
+
+        /**
+         * 消费并清空缓存的认证结果
+         */
+        fun consumePendingAuthResult(): AuthResultMessage? {
+            val r = pendingAuthResult
+            pendingAuthResult = null
+            return r
+        }
+
         // 上次断连追踪（供调试页面使用）
         @Volatile
         var lastDisconnectTime: String? = null
@@ -251,13 +277,25 @@ class WebSocketService : Service() {
                 override fun onChallenge(challenge: ChallengeMessage) {
                     Log.d(TAG, "收到挑战: ${challenge.challengeId}")
                     updateNotification("新的认证请求")
-                    challengeCallback?.onChallengeReceived(challenge)
+                    if (challengeCallback != null) {
+                        challengeCallback?.onChallengeReceived(challenge)
+                    } else {
+                        // Activity 不在前台，缓存挑战，等回到前台后弹窗
+                        pendingChallenge = challenge
+                        Log.d(TAG, "⏸ Activity 不在前台，缓存挑战: ${challenge.challengeId}")
+                    }
                 }
 
                 override fun onAuthResult(result: AuthResultMessage) {
                     Log.d(TAG, "认证结果: ${result.status}")
                     updateNotification("已连接")
-                    challengeCallback?.onAuthResultReceived(result)
+                    if (challengeCallback != null) {
+                        challengeCallback?.onAuthResultReceived(result)
+                    } else {
+                        // Activity 不在前台，缓存认证结果，等回到前台后显示
+                        pendingAuthResult = result
+                        Log.d(TAG, "⏸ Activity 不在前台，缓存认证结果: ${result.status}")
+                    }
                 }
 
                 override fun onError(message: String) {

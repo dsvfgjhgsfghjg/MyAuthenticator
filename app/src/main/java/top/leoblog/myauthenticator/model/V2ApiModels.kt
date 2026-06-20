@@ -65,6 +65,8 @@ data class UserProfileResponse(
     val userId: Long,
     @SerializedName("username")
     val username: String,
+    @SerializedName("nickname")
+    val nickname: String?,
     @SerializedName("email")
     val email: String?,
     @SerializedName("avatarUrl")
@@ -109,7 +111,81 @@ data class AuthHistoryRecord(
     val respondedAt: String?     // ISO datetime
 )
 
-// ===================== 2.4 调试会话信息 =====================
+// ===================== 2.4 Dashboard（Authenticator 首页聚合） =====================
+
+data class DashboardResponse(
+    @SerializedName("user")
+    val user: DashboardUserInfo,
+    @SerializedName("device")
+    val device: DashboardDeviceInfo?,
+    @SerializedName("recentHistory")
+    val recentHistory: DashboardRecentHistory,
+    @SerializedName("lastAuthResult")
+    val lastAuthResult: DashboardLastAuthResult?,
+    @SerializedName("lastLoginAt")
+    val lastLoginAt: String?
+)
+
+data class DashboardUserInfo(
+    @SerializedName("userId")
+    val userId: Long,
+    @SerializedName("username")
+    val username: String,
+    @SerializedName("nickname")
+    val nickname: String?,
+    @SerializedName("email")
+    val email: String?,
+    @SerializedName("avatarUrl")
+    val avatarUrl: String?,
+    @SerializedName("deviceCount")
+    val deviceCount: Int
+)
+
+data class DashboardDeviceInfo(
+    @SerializedName("deviceId")
+    val deviceId: String,
+    @SerializedName("deviceName")
+    val deviceName: String,
+    @SerializedName("cipherPref")
+    val cipherPref: String,
+    @SerializedName("boundAt")
+    val boundAt: String?
+)
+
+data class DashboardRecentHistory(
+    @SerializedName("total")
+    val total: Long,
+    @SerializedName("records")
+    val records: List<DashboardHistoryRecord>
+)
+
+data class DashboardHistoryRecord(
+    @SerializedName("id")
+    val id: Long,
+    @SerializedName("challengeId")
+    val challengeId: String,
+    @SerializedName("deviceName")
+    val deviceName: String?,
+    @SerializedName("status")
+    val status: String,
+    @SerializedName("requestedAt")
+    val requestedAt: String,
+    @SerializedName("respondedAt")
+    val respondedAt: String?,
+    @SerializedName("responseTimeMs")
+    val responseTimeMs: Long?
+)
+
+data class DashboardLastAuthResult(
+    @SerializedName("status")
+    val status: String?,
+    @SerializedName("deviceName")
+    val deviceName: String?,
+    @SerializedName("requestedAt")
+    val requestedAt: String?
+)
+
+// ===================== 2.5 调试会话信息 =====================
 
 data class DebugSessionsResponse(
     @SerializedName("userId")

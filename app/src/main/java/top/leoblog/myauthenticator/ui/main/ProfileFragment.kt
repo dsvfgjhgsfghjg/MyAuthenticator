@@ -152,9 +152,9 @@ class ProfileFragment : Fragment() {
     }
 
     private fun loadProfile() {
-        // 先从本地加载基础信息
-        val username = secureStorage.getUsername() ?: "用户"
-        bindingView.findViewById<TextView>(R.id.tv_nickname).text = username
+        // 先从本地加载基础信息（优先显示昵称）
+        val nickname = secureStorage.getNickname() ?: secureStorage.getUsername() ?: "用户"
+        bindingView.findViewById<TextView>(R.id.tv_nickname).text = nickname
 
         val token = secureStorage.getToken() ?: return
 
@@ -185,6 +185,11 @@ class ProfileFragment : Fragment() {
      * 当 API 调用失败时，使用 SecureStorage 中的缓存数据显示 Profile
      */
     private fun displayCachedProfile() {
+        // 昵称
+        secureStorage.getNickname()?.let { nickname ->
+            bindingView.findViewById<TextView>(R.id.tv_nickname).text = nickname
+        }
+
         // 邮箱
         secureStorage.getProfileEmail()?.let { email ->
             bindingView.findViewById<TextView>(R.id.tv_email).text = email
@@ -253,6 +258,11 @@ class ProfileFragment : Fragment() {
             }
         }
 
+        // 昵称
+        profile.nickname?.let { nickname ->
+            bindingView.findViewById<TextView>(R.id.tv_nickname).text = nickname
+        }
+
         // 邮箱
         bindingView.findViewById<TextView>(R.id.tv_email).text = profile.email ?: ""
 
@@ -277,6 +287,7 @@ class ProfileFragment : Fragment() {
      * 缓存 Profile 数据到 SecureStorage，供调试页面使用
      */
     private fun cacheProfile(profile: UserProfileResponse) {
+        profile.nickname?.let { secureStorage.saveNickname(it) }
         profile.email?.let { secureStorage.saveProfileEmail(it) }
         secureStorage.saveProfileDeviceCount(profile.deviceCount)
         profile.avatarUrl?.let { secureStorage.saveProfileAvatarUrl(it) }

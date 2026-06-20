@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="28dp" android:background="@android:color/white" android:elevation="8dp">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="28dp" android:background="@color/clannad_dialog" android:elevation="8dp">
 
     <!-- 标题 -->
     <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🔐 安全验证" android:textSize="20sp" android:textStyle="bold" android:textColor="#1a1a1a" android:layout_marginBottom="8dp" />

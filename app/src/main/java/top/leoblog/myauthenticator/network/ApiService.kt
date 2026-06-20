@@ -111,6 +111,18 @@ interface ApiService {
         @Query("status") status: String? = null
     ): Response<ApiResponse<AuthHistoryPageData>>
 
+    // ===================== Dashboard（Authenticator 首页聚合） =====================
+
+    /**
+     * 获取 Authenticator 首页聚合数据
+     * 对应 APP_DASHBOARD_API_GUIDE.md
+     */
+    @GET("/api/auth/app/dashboard")
+    suspend fun getDashboard(
+        @Header("Authorization") authorization: String,
+        @Query("deviceId") deviceId: String? = null
+    ): Response<ApiResponse<DashboardResponse>>
+
     // ===================== 调试接口 =====================
 
     /**

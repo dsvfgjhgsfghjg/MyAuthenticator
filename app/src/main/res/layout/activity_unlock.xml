@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:gravity="center_horizontal" android:background="@color/clannad_dashboard" android:padding="32dp">
+
+    <!-- App icon / title -->
+    <ImageView android:layout_width="72dp" android:layout_height="72dp" android:layout_marginTop="64dp" android:src="@mipmap/ic_launcher" android:contentDescription="@string/app_name" />
+
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="@string/app_name" android:textSize="24sp" android:textStyle="bold" android:textColor="@color/profile_text_dark" />
+
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/lock_screen_hint" android:textSize="14sp" android:textColor="@android:color/darker_gray" />
+
+    <!-- PIN Input -->
+    <com.google.android.material.textfield.TextInputLayout android:id="@+id/til_pin" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="32dp" style="@style/Widget.Material3.TextInputLayout.OutlinedBox" android:hint="@string/pin_hint" app:passwordToggleEnabled="true">
+
+        <com.google.android.material.textfield.TextInputEditText android:id="@+id/et_pin" android:layout_width="match_parent" android:layout_height="wrap_content" android:inputType="numberPassword" android:maxLength="6" android:textSize="24sp" android:gravity="center" android:letterSpacing="0.15" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Error message -->
+    <TextView android:id="@+id/tv_error" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textSize="14sp" android:textColor="@android:color/holo_red_dark" android:visibility="gone" />
+
+    <!-- Fingerprint button (only visible if biometric enabled) -->
+    <androidx.cardview.widget.CardView android:id="@+id/cv_fingerprint" android:layout_width="80dp" android:layout_height="80dp" android:layout_marginTop="24dp" android:visibility="gone" app:cardCornerRadius="40dp" app:cardElevation="6dp">
+
+        <ImageView android:id="@+id/iv_fingerprint" android:layout_width="48dp" android:layout_height="48dp" android:layout_gravity="center" android:src="@drawable/ic_fingerprint" android:contentDescription="@string/biometric_hint" />
+
+    </androidx.cardview.widget.CardView>
+
+    <!-- Unlock button -->
+    <com.google.android.material.button.MaterialButton android:id="@+id/btn_unlock" android:layout_width="match_parent" android:layout_height="56dp" android:layout_marginTop="24dp" android:text="@string/btn_unlock" android:textSize="16sp" />
+
+    <!-- PIN settings hint -->
+    <TextView android:id="@+id/tv_pin_settings_hint" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:textSize="12sp" android:textColor="@android:color/darker_gray" android:visibility="gone" />
+
+</LinearLayout>

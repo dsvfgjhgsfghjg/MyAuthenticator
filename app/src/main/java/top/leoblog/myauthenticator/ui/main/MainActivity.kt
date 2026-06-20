@@ -20,6 +20,8 @@ import top.leoblog.myauthenticator.service.WebSocketService
 import top.leoblog.myauthenticator.storage.DeviceIdManager
 import top.leoblog.myauthenticator.storage.SecureStorage
 import top.leoblog.myauthenticator.ui.challenge.ChallengeDialogFragment
+import top.leoblog.myauthenticator.ui.lock.LockManager
+import top.leoblog.myauthenticator.ui.lock.UnlockActivity
 import top.leoblog.myauthenticator.ui.login.LoginActivity
 
 /**
@@ -86,6 +88,17 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+
+        // 检查是否因后台超时需重新锁定
+        val lockManager = LockManager(secureStorage)
+        if (lockManager.shouldLock()) {
+            Log.d(TAG, "后台超时，重新锁定")
+            val intent = UnlockActivity.createIntent(this)
+            startActivity(intent)
+            finish()
+            return
+        }
+
         // 注册挑战回调 — 接收 WebSocket 推送的 3 选 1 挑战
         WebSocketService.challengeCallback = object : ChallengeCallback {
             override fun onChallengeReceived(challenge: ChallengeMessage) {
@@ -101,6 +114,19 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this@MainActivity, getAuthResultMessage(result), Toast.LENGTH_LONG).show()
                 }
             }
+        }
+
+        // 消费后台期间缓存的挑战（Activity 回到前台时处理）
+        val pendingChallenge = WebSocketService.consumePendingChallenge()
+        if (pendingChallenge != null) {
+            Log.d(TAG, "消费缓存的挑战: id=${pendingChallenge.challengeId}")
+            showChallengeDialog(pendingChallenge)
+        }
+
+        val pendingResult = WebSocketService.consumePendingAuthResult()
+        if (pendingResult != null) {
+            Log.d(TAG, "消费缓存的认证结果: status=${pendingResult.status}")
+            Toast.makeText(this@MainActivity, getAuthResultMessage(pendingResult), Toast.LENGTH_LONG).show()
         }
     }
 

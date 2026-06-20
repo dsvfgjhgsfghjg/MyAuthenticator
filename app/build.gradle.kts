@@ -64,6 +64,9 @@ dependencies {
     // Coil (图片加载)
     implementation(libs.coil)
 
+    // Biometric (指纹解锁)
+    implementation(libs.androidx.biometric)
+
     // SwipeRefreshLayout
     implementation(libs.androidx.swiperefreshlayout)
 
