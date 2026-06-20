@@ -121,11 +121,7 @@ class SettingsActivity : AppCompatActivity() {
         val spinner = binding.spinnerCipher
 
         // 根据当前算法设置选中位置
-        val position = when (currentCipher) {
-            "AES-256-GCM" -> 0
-            "SM4-GCM" -> 1
-            else -> 0
-        }
+        val position = getCipherPosition(currentCipher)
         spinner.setSelection(position)
 
         // 监听选择变更，调用 API 更新服务端
@@ -166,10 +162,23 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * 获取加密算法在 Spinner 中的位置
+     */
+    private fun getCipherPosition(cipher: String?): Int {
+        return when (cipher) {
+            "AES-256-GCM" -> 0
+            "AES-192-GCM" -> 1
+            "AES-128-GCM" -> 2
+            "SM4-GCM" -> 3
+            else -> 0
+        }
+    }
+
     private fun rollbackCipher(spinner: Spinner, fallback: String?, reason: String) {
         secureStorage.saveCipherPref(fallback ?: "AES-256-GCM")
         binding.tvCipher.text = "加密算法: ${fallback ?: "未知"}"
-        spinner.setSelection(if (fallback == "SM4-GCM") 1 else 0)
+        spinner.setSelection(getCipherPosition(fallback))
         Toast.makeText(this@SettingsActivity,
             getString(R.string.cipher_switch_failed, reason),
             Toast.LENGTH_SHORT).show()

@@ -282,8 +282,16 @@ class AppWebSocketClient(
                 dhKeyPair!!.private, serverPublicKey
             )
 
-            // 3. 派生 AES-256 密钥
-            aesKey = KeyDerivation.deriveAesKey(sharedSecret, 256)
+            // 3. 根据设备首选加密算法派生对应长度的密钥
+            val keySize = when (cipherAlgo) {
+                "AES-128-GCM" -> 128
+                "AES-192-GCM" -> 192
+                "AES-256-GCM" -> 256
+                "SM4-GCM" -> 128
+                else -> 256
+            }
+            aesKey = KeyDerivation.deriveAesKey(sharedSecret, keySize)
+            Log.d(TAG, "   派生密钥: cipherAlgo=$cipherAlgo, keySize=${keySize}bit")
 
             // 4. 发送客户端公钥
             val clientPublicKey = CryptoUtils.publicKeyToBase64(dhKeyPair!!.public)
@@ -352,7 +360,7 @@ class AppWebSocketClient(
             val ciphertext = Base64.getDecoder().decode(ciphertextB64)
 
             val decryptedBytes = when (cipherAlgo) {
-                "AES-256-GCM" -> AesGcmCrypto.decrypt(aesKey!!, iv, ciphertext)
+                "AES-256-GCM", "AES-192-GCM", "AES-128-GCM" -> AesGcmCrypto.decrypt(aesKey!!, iv, ciphertext)
                 "SM4-GCM" -> Sm4GcmCrypto.decrypt(aesKey!!, iv, ciphertext)
                 else -> throw IllegalStateException("不支持的加密算法: $cipherAlgo")
             }
@@ -440,13 +448,13 @@ class AppWebSocketClient(
      */
     private fun sendEncryptedMessage(plaintext: String) {
         val iv = when (cipherAlgo) {
-            "AES-256-GCM" -> AesGcmCrypto.generateIv()
+            "AES-256-GCM", "AES-192-GCM", "AES-128-GCM" -> AesGcmCrypto.generateIv()
             "SM4-GCM" -> Sm4GcmCrypto.generateIv()
             else -> throw IllegalStateException("不支持的加密算法: $cipherAlgo")
         }
 
         val encryptedBytes = when (cipherAlgo) {
-            "AES-256-GCM" -> AesGcmCrypto.encrypt(aesKey!!, iv, plaintext.toByteArray(Charsets.UTF_8))
+            "AES-256-GCM", "AES-192-GCM", "AES-128-GCM" -> AesGcmCrypto.encrypt(aesKey!!, iv, plaintext.toByteArray(Charsets.UTF_8))
             "SM4-GCM" -> Sm4GcmCrypto.encrypt(aesKey!!, iv, plaintext.toByteArray(Charsets.UTF_8))
             else -> throw IllegalStateException("不支持的加密算法: $cipherAlgo")
         }

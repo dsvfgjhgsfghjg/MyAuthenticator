@@ -87,6 +87,8 @@
 
     <string-array name="cipher_options">
         <item>AES-256-GCM</item>
+        <item>AES-192-GCM</item>
+        <item>AES-128-GCM</item>
         <item>SM4-GCM</item>
     </string-array>
 
@@ -94,6 +96,17 @@
     <string name="upload_debug_info">📤 上传调试信息</string>
     <string name="upload_success">调试信息已上传</string>
     <string name="upload_failed">上传失败：%s</string>
+
+    <!-- Authenticator 首页 -->
+    <string name="authenticator_title">Authenticator</string>
+    <string name="recent_auth_history">最近认证记录</string>
+    <string name="view_all_history">查看全部认证历史</string>
+    <string name="no_auth_records">暂无认证记录</string>
+    <string name="device_count_format">%d 台设备</string>
+    <string name="cipher_label">加密算法</string>
+    <string name="last_result">上次结果</string>
+    <string name="last_result_empty">暂无记录</string>
+    <string name="response_time_format">%d 秒内</string>
 
     <!-- Bug 日志上报 -->
     <string name="menu_feedback">提交反馈</string>
