@@ -53,6 +53,11 @@ class ChallengeDialogFragment : DialogFragment() {
 
     var onNumberSelected: ((challengeId: String, selectedNumber: Int) -> Unit)? = null
 
+    /**
+     * 弹窗被关闭时的回调（供 MainActivity 清除引用）
+     */
+    var onDismissListener: (() -> Unit)? = null
+
     private var challengeId: String = ""
     private var options = listOf(0, 0, 0)
     private var expiresAt: Long = 0L
@@ -62,6 +67,7 @@ class ChallengeDialogFragment : DialogFragment() {
     private lateinit var progressBar: ProgressBar
     private lateinit var tvCountdown: TextView
     private lateinit var tvStatus: TextView
+    private lateinit var btnClose: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -106,12 +112,19 @@ class ChallengeDialogFragment : DialogFragment() {
             dialog.findViewById(R.id.btn_option_3)
         )
 
+        btnClose = dialog.findViewById(R.id.btn_close)
+
         // 设置 3 个选项数字
         options.forEachIndexed { index, value ->
             optionButtons[index].text = value.toString()
             optionButtons[index].setOnClickListener {
                 onOptionSelected(value)
             }
+        }
+
+        // 关闭按钮：不做任何操作，只关闭弹窗
+        btnClose.setOnClickListener {
+            if (isAdded) dismiss()
         }
 
         // 启动倒计时
@@ -145,6 +158,9 @@ class ChallengeDialogFragment : DialogFragment() {
         tvStatus.visibility = View.VISIBLE
         tvStatus.text = "⏳ 验证中..."
         tvStatus.setTextColor(Color.parseColor("#666666"))
+        // 加载状态时显示关闭按钮，让用户可以退出等待
+        btnClose.visibility = View.VISIBLE
+        btnClose.text = "取消等待"
     }
 
     /**
@@ -157,6 +173,8 @@ class ChallengeDialogFragment : DialogFragment() {
         tvStatus.visibility = View.VISIBLE
         tvStatus.text = "⏰ 挑战已过期"
         tvStatus.setTextColor(Color.parseColor("#E6A23C"))
+        btnClose.visibility = View.VISIBLE
+        btnClose.text = "关闭"
 
         // 3 秒后自动关闭
         Handler(Looper.getMainLooper()).postDelayed({
@@ -177,6 +195,8 @@ class ChallengeDialogFragment : DialogFragment() {
             "approved" -> {
                 tvStatus.text = "✅ 验证通过"
                 tvStatus.setTextColor(Color.parseColor("#67C23A"))
+                btnClose.visibility = View.VISIBLE
+                btnClose.text = "关闭"
                 // 1.5 秒后自动关闭
                 Handler(Looper.getMainLooper()).postDelayed({
                     if (isAdded) dismiss()
@@ -185,6 +205,8 @@ class ChallengeDialogFragment : DialogFragment() {
             "rejected" -> {
                 tvStatus.text = "❌ 验证失败：${reason ?: "数字选择错误"}"
                 tvStatus.setTextColor(Color.parseColor("#F56C6C"))
+                btnClose.visibility = View.VISIBLE
+                btnClose.text = "关闭"
                 Handler(Looper.getMainLooper()).postDelayed({
                     if (isAdded) dismiss()
                 }, 3000)
@@ -192,6 +214,8 @@ class ChallengeDialogFragment : DialogFragment() {
             "expired" -> {
                 tvStatus.text = "⏰ ${reason ?: "挑战已过期"}"
                 tvStatus.setTextColor(Color.parseColor("#E6A23C"))
+                btnClose.visibility = View.VISIBLE
+                btnClose.text = "关闭"
                 Handler(Looper.getMainLooper()).postDelayed({
                     if (isAdded) dismiss()
                 }, 3000)
@@ -224,6 +248,8 @@ class ChallengeDialogFragment : DialogFragment() {
 
     override fun onDestroyView() {
         countDownTimer?.cancel()
+        // 通知外部弹窗已关闭
+        onDismissListener?.invoke()
         super.onDestroyView()
     }
 }

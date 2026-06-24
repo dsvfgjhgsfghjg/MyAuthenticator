@@ -160,4 +160,37 @@
         <item>@string/lock_timeout_1m</item>
         <item>@string/lock_timeout_5m</item>
     </string-array>
+
+    <!-- ==================== 保活设置 ==================== -->
+    <string name="keepalive_section">保活设置</string>
+    <string name="keepalive_mode_label">保活模式</string>
+    <string name="keepalive_mode_foreground">前台服务模式（推荐）</string>
+    <string name="keepalive_mode_dual_daemon">双守护进程模式（激进）</string>
+    <string name="keepalive_mode_summary">更激进的双进程互相守护，防止被杀</string>
+    <string name="keepalive_periodic_wakeup">定时唤醒</string>
+    <string name="keepalive_periodic_wakeup_summary">定期检查并恢复保活服务，降低失效风险</string>
+    <string name="keepalive_wakeup_interval">唤醒间隔</string>
+    <string name="keepalive_wakeup_interval_5m">5 分钟</string>
+    <string name="keepalive_wakeup_interval_10m">10 分钟</string>
+    <string name="keepalive_wakeup_interval_15m">15 分钟（默认）</string>
+    <string name="keepalive_wakeup_interval_30m">30 分钟</string>
+    <string name="keepalive_miui_title">MIUI 优化向导</string>
+    <string name="keepalive_miui_auto_start">🔓 开启自启动</string>
+    <string name="keepalive_miui_auto_start_desc">允许应用开机和后台自动启动</string>
+    <string name="keepalive_miui_battery">🔋 关闭省电限制</string>
+    <string name="keepalive_miui_battery_desc">将省电策略设为「无限制」</string>
+    <string name="keepalive_miui_notification">🔔 开启通知权限</string>
+    <string name="keepalive_miui_notification_desc">保证前台服务通知可见</string>
+    <string name="keepalive_switch_mode">切换保活模式</string>
+    <string name="keepalive_switch_mode_warning">切换保活模式将重新配置后台服务，是否继续？</string>
+    <string name="keepalive_switch_success">已切换至 %s</string>
+    <string name="keepalive_wakeup_enabled">定时唤醒已启用</string>
+    <string name="keepalive_wakeup_disabled">定时唤醒已禁用</string>
+
+    <string-array name="keepalive_wakeup_interval_options">
+        <item>@string/keepalive_wakeup_interval_5m</item>
+        <item>@string/keepalive_wakeup_interval_10m</item>
+        <item>@string/keepalive_wakeup_interval_15m</item>
+        <item>@string/keepalive_wakeup_interval_30m</item>
+    </string-array>
 </resources>

@@ -1,8 +1,104 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:gravity="center" android:orientation="vertical" android:background="@color/clannad_dashboard">
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/clannad_dashboard">
 
-    <ImageView android:layout_width="64dp" android:layout_height="64dp" android:src="@drawable/ic_dashboard" android:alpha="0.38" />
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
 
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Dashboard" android:textSize="16sp" android:textColor="@android:color/darker_gray" />
+        <!-- 加载指示器 -->
+        <ProgressBar android:id="@+id/loading_indicator" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:layout_marginTop="48dp" android:visibility="gone" />
 
-</LinearLayout>
+        <!-- 无能力提示 -->
+        <LinearLayout android:id="@+id/no_ability_layout" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="center" android:padding="32dp" android:visibility="gone">
+
+            <ImageView android:layout_width="64dp" android:layout_height="64dp" android:src="@drawable/ic_dashboard" android:alpha="0.38" />
+
+            <TextView android:id="@+id/no_ability_message" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:textSize="16sp" android:textColor="#666" android:gravity="center" />
+        </LinearLayout>
+
+        <!-- 错误提示 -->
+        <LinearLayout android:id="@+id/error_layout" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:gravity="center" android:padding="32dp" android:visibility="gone">
+
+            <TextView android:id="@+id/error_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:textSize="16sp" android:textColor="#f44336" android:gravity="center" />
+
+            <com.google.android.material.button.MaterialButton android:id="@+id/btn_retry" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="重试" />
+        </LinearLayout>
+
+        <!-- Dashboard 内容 -->
+        <LinearLayout android:id="@+id/dashboard_content" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:visibility="gone">
+
+            <!-- 页面标题 -->
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="管理后台" android:textSize="22sp" android:textStyle="bold" android:textColor="@android:color/black" />
+
+            <!-- 登录信息卡片 -->
+            <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" app:cardCornerRadius="8dp" app:cardElevation="2dp">
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="登录信息" android:textSize="16sp" android:textStyle="bold" android:textColor="@android:color/black" />
+
+                    <TextView android:id="@+id/tv_current_ip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:textSize="14sp" android:textColor="#666" />
+
+                    <TextView android:id="@+id/tv_last_login_ip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textSize="14sp" android:textColor="#666" />
+
+                    <TextView android:id="@+id/tv_last_login_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textSize="14sp" android:textColor="#666" />
+
+                    <TextView android:id="@+id/tv_login_count" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textSize="14sp" android:textColor="#666" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- 统计卡片 -->
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="horizontal" android:weightSum="3">
+
+                <!-- 用户数 -->
+                <com.google.android.material.card.MaterialCardView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginEnd="4dp" app:cardCornerRadius="8dp" app:cardElevation="2dp">
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="12dp" android:gravity="center">
+
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="用户" android:textSize="12sp" android:textColor="#666" />
+
+                        <TextView android:id="@+id/tv_total_users" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textSize="24sp" android:textStyle="bold" android:textColor="@android:color/black" />
+
+                        <TextView android:id="@+id/tv_total_users_change" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:textSize="12sp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- 文章数 -->
+                <com.google.android.material.card.MaterialCardView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginHorizontal="4dp" app:cardCornerRadius="8dp" app:cardElevation="2dp">
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="12dp" android:gravity="center">
+
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="文章" android:textSize="12sp" android:textColor="#666" />
+
+                        <TextView android:id="@+id/tv_total_posts" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textSize="24sp" android:textStyle="bold" android:textColor="@android:color/black" />
+
+                        <TextView android:id="@+id/tv_total_posts_change" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:textSize="12sp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+
+                <!-- 今日访问 -->
+                <com.google.android.material.card.MaterialCardView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:layout_marginStart="4dp" app:cardCornerRadius="8dp" app:cardElevation="2dp">
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="12dp" android:gravity="center">
+
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="今日" android:textSize="12sp" android:textColor="#666" />
+
+                        <TextView android:id="@+id/tv_today_visits" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:textSize="24sp" android:textStyle="bold" android:textColor="@android:color/black" />
+
+                        <TextView android:id="@+id/tv_today_visits_change" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2dp" android:textSize="12sp" />
+                    </LinearLayout>
+                </com.google.android.material.card.MaterialCardView>
+            </LinearLayout>
+
+            <!-- 快捷操作 -->
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="快捷操作" android:textSize="18sp" android:textStyle="bold" android:textColor="@android:color/black" />
+
+            <androidx.recyclerview.widget.RecyclerView android:id="@+id/quick_actions_recycler_view" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" android:nestedScrollingEnabled="false" />
+
+            <!-- 最近动态 -->
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="20dp" android:text="最近动态" android:textSize="18sp" android:textStyle="bold" android:textColor="@android:color/black" />
+
+            <androidx.recyclerview.widget.RecyclerView android:id="@+id/recent_activities_recycler_view" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:layout_marginBottom="16dp" app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" android:nestedScrollingEnabled="false" />
+
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

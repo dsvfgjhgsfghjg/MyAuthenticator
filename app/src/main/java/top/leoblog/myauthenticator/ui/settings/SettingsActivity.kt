@@ -23,11 +23,14 @@ import top.leoblog.myauthenticator.network.RetrofitClient
 import top.leoblog.myauthenticator.service.ChallengeCallback
 import top.leoblog.myauthenticator.service.ConnectionCallback
 import top.leoblog.myauthenticator.service.WebSocketService
+import top.leoblog.myauthenticator.keepalive.KeepAliveManager
+import top.leoblog.myauthenticator.keepalive.KeepAliveMode
 import top.leoblog.myauthenticator.storage.SecureStorage
 import top.leoblog.myauthenticator.ui.bind.BindActivity
 import top.leoblog.myauthenticator.ui.challenge.ChallengeDialogFragment
 import top.leoblog.myauthenticator.ui.lock.LockManager
 import top.leoblog.myauthenticator.ui.lock.UnlockActivity
+import android.widget.ArrayAdapter
 
 /**
  * 设置 Activity — 连接状态、设备信息、操作按钮、应用锁配置。
@@ -37,6 +40,7 @@ class SettingsActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySettingsBinding
     private lateinit var secureStorage: SecureStorage
     private lateinit var lockManager: LockManager
+    private lateinit var keepAliveManager: KeepAliveManager
     private var isConnected = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -46,8 +50,10 @@ class SettingsActivity : AppCompatActivity() {
 
         secureStorage = SecureStorage(this)
         lockManager = LockManager(secureStorage)
+        keepAliveManager = KeepAliveManager(this)
 
         setupViews()
+        setupKeepAliveViews()
 
         // 设置服务回调
         WebSocketService.challengeCallback = object : ChallengeCallback {
@@ -476,6 +482,136 @@ class SettingsActivity : AppCompatActivity() {
         intent.flags = android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finishAffinity()
+    }
+
+    // ==================== 保活设置 ====================
+
+    private fun setupKeepAliveViews() {
+        // 1. 保活模式 Spinner
+        setupKeepAliveModeSpinner()
+
+        // 2. 定时唤醒开关
+        binding.switchPeriodicWakeup.isChecked = keepAliveManager.isPeriodicWakeupEnabled()
+        binding.layoutWakeupInterval.visibility = if (keepAliveManager.isPeriodicWakeupEnabled()) View.VISIBLE else View.GONE
+        binding.switchPeriodicWakeup.setOnCheckedChangeListener { _, isChecked ->
+            keepAliveManager.setPeriodicWakeupEnabled(isChecked)
+            binding.layoutWakeupInterval.visibility = if (isChecked) View.VISIBLE else View.GONE
+            Toast.makeText(
+                this,
+                if (isChecked) R.string.keepalive_wakeup_enabled else R.string.keepalive_wakeup_disabled,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
+        // 3. 唤醒间隔 Spinner
+        setupWakeupIntervalSpinner()
+
+        // 4. MIUI 优化引导
+        setupMiuiOptimizationViews()
+    }
+
+    private fun setupKeepAliveModeSpinner() {
+        // 创建保活模式适配器（使用 string 数组，名称在 KeepAliveMode 中定义）
+        val modes = KeepAliveMode.entries.map { it.displayName }
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, modes)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerKeepaliveMode.adapter = adapter
+
+        // 设置当前选中项
+        val currentMode = keepAliveManager.getCurrentMode()
+        binding.spinnerKeepaliveMode.setSelection(currentMode.ordinal)
+
+        // 监听切换
+        binding.spinnerKeepaliveMode.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            private var initialized = false
+
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
+                if (!initialized) {
+                    initialized = true
+                    return // 跳过初始化时的触发
+                }
+
+                val selectedMode = KeepAliveMode.entries[pos]
+                if (selectedMode == keepAliveManager.getCurrentMode()) return
+
+                // 确认切换
+                MaterialAlertDialogBuilder(this@SettingsActivity)
+                    .setTitle(R.string.keepalive_switch_mode)
+                    .setMessage(R.string.keepalive_switch_mode_warning)
+                    .setPositiveButton(R.string.btn_confirm) { _, _ ->
+                        keepAliveManager.switchMode(selectedMode)
+                        Toast.makeText(
+                            this@SettingsActivity,
+                            getString(R.string.keepalive_switch_success, selectedMode.displayName),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    .setNegativeButton(R.string.btn_cancel) { _, _ ->
+                        // 恢复选择
+                        binding.spinnerKeepaliveMode.setSelection(keepAliveManager.getCurrentMode().ordinal)
+                    }
+                    .show()
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
+    }
+
+    private fun setupWakeupIntervalSpinner() {
+        val intervals = resources.getStringArray(R.array.keepalive_wakeup_interval_options)
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, intervals)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerWakeupInterval.adapter = adapter
+
+        // 设置当前选中项
+        val currentMinutes = keepAliveManager.getWakeupIntervalMinutes()
+        val position = when (currentMinutes) {
+            5 -> 0
+            10 -> 1
+            15 -> 2
+            30 -> 3
+            else -> 2 // 默认 15 分钟
+        }
+        binding.spinnerWakeupInterval.setSelection(position)
+
+        binding.spinnerWakeupInterval.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
+                val minutes = when (pos) {
+                    0 -> 5
+                    1 -> 10
+                    2 -> 15
+                    3 -> 30
+                    else -> 15
+                }
+                keepAliveManager.setWakeupIntervalMinutes(minutes)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
+    }
+
+    private fun setupMiuiOptimizationViews() {
+        if (!keepAliveManager.isMiui()) {
+            binding.layoutMiuiOptimization.visibility = View.GONE
+            return
+        }
+
+        // MIUI 系统，显示优化引导
+        binding.layoutMiuiOptimization.visibility = View.VISIBLE
+
+        binding.btnMiuiAutoStart.setOnClickListener {
+            val success = keepAliveManager.openMiuiAutoStartSetting()
+            if (!success) {
+                Toast.makeText(this, "请手动在系统设置中开启自启动", Toast.LENGTH_LONG).show()
+            }
+        }
+
+        binding.btnMiuiBattery.setOnClickListener {
+            val success = keepAliveManager.openMiuiBatterySavingSetting()
+            if (!success) {
+                Toast.makeText(this, "请手动在系统设置中关闭省电限制", Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     override fun onDestroy() {

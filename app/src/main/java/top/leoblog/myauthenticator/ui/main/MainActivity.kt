@@ -5,7 +5,6 @@ import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI
@@ -14,12 +13,12 @@ import kotlinx.coroutines.launch
 import top.leoblog.myauthenticator.R
 import top.leoblog.myauthenticator.model.AuthResultMessage
 import top.leoblog.myauthenticator.model.ChallengeMessage
-import top.leoblog.myauthenticator.network.AppWebSocketClient
 import top.leoblog.myauthenticator.service.ChallengeCallback
 import top.leoblog.myauthenticator.service.WebSocketService
 import top.leoblog.myauthenticator.storage.DeviceIdManager
 import top.leoblog.myauthenticator.storage.SecureStorage
 import top.leoblog.myauthenticator.ui.challenge.ChallengeDialogFragment
+import top.leoblog.myauthenticator.MyAuthenticatorApp
 import top.leoblog.myauthenticator.ui.lock.LockManager
 import top.leoblog.myauthenticator.ui.lock.UnlockActivity
 import top.leoblog.myauthenticator.ui.login.LoginActivity
@@ -38,6 +37,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private lateinit var secureStorage: SecureStorage
+
+    /**
+     * 当前显示的挑战弹窗引用，用于将认证结果传递回弹窗
+     */
+    private var currentChallengeDialog: ChallengeDialogFragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -89,14 +93,16 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        // 检查是否因后台超时需重新锁定
-        val lockManager = LockManager(secureStorage)
-        if (lockManager.shouldLock()) {
-            Log.d(TAG, "后台超时，重新锁定")
-            val intent = UnlockActivity.createIntent(this)
-            startActivity(intent)
-            finish()
-            return
+        // 仅在 app 从后台切回前台时检查锁，内部 Activity 间跳转不触发锁定
+        if (MyAuthenticatorApp.checkAndClearForegroundFlag()) {
+            val lockManager = LockManager(secureStorage)
+            if (lockManager.shouldLock()) {
+                Log.d(TAG, "后台超时，重新锁定")
+                val intent = UnlockActivity.createIntent(this)
+                startActivity(intent)
+                finish()
+                return
+            }
         }
 
         // 注册挑战回调 — 接收 WebSocket 推送的 3 选 1 挑战
@@ -111,7 +117,13 @@ class MainActivity : AppCompatActivity() {
             override fun onAuthResultReceived(result: top.leoblog.myauthenticator.model.AuthResultMessage) {
                 Log.d(TAG, "认证结果: status=${result.status}, reason=${result.reason}")
                 runOnUiThread {
-                    Toast.makeText(this@MainActivity, getAuthResultMessage(result), Toast.LENGTH_LONG).show()
+                    // 将结果传递给当前挑战弹窗（如果有），弹窗内部会显示结果并自动关闭
+                    if (currentChallengeDialog?.isAdded == true) {
+                        currentChallengeDialog?.showResult(result.status, result.reason)
+                    } else {
+                        // 没有弹窗时降级为 Toast 通知
+                        Toast.makeText(this@MainActivity, getAuthResultMessage(result), Toast.LENGTH_LONG).show()
+                    }
                 }
             }
         }
@@ -181,6 +193,12 @@ class MainActivity : AppCompatActivity() {
             Log.d(TAG, "用户选择: challengeId=$challengeId, number=$selectedNumber")
             // 通过 WebSocketService 发送响应
             WebSocketService.sendChallengeResponseStatic(challengeId, selectedNumber)
+        }
+        // 保存引用，用于将后续 auth_result 传递给弹窗
+        currentChallengeDialog = dialog
+        // 弹窗关闭时清除引用
+        dialog.onDismissListener = {
+            currentChallengeDialog = null
         }
         dialog.show(supportFragmentManager, "challenge_dialog")
     }

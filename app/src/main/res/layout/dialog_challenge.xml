@@ -27,9 +27,12 @@
     <ProgressBar android:id="@+id/progress_bar" android:layout_width="48dp" android:layout_height="48dp" android:layout_gravity="center" android:visibility="gone" android:layout_marginBottom="16dp" />
 
     <!-- 状态信息 -->
-    <TextView android:id="@+id/tv_status" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:textSize="16sp" android:textColor="#1a1a1a" android:visibility="gone" android:layout_marginBottom="8dp" />
+    <TextView android:id="@+id/tv_status" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center" android:textSize="16sp" android:textColor="#1a1a1a" android:visibility="gone" android:layout_marginBottom="12dp" />
+
+    <!-- 关闭按钮（默认隐藏，在加载/结果状态时显示） -->
+    <Button android:id="@+id/btn_close" android:layout_width="wrap_content" android:layout_height="40dp" android:minWidth="80dp" android:text="关闭" android:visibility="gone" android:layout_gravity="center" android:layout_marginBottom="4dp" android:textSize="14sp" style="@style/Widget.AppCompat.Button.Borderless" />
 
     <!-- 底部提示 -->
-    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="选择错误将导致验证失败" android:textSize="12sp" android:textColor="#999999" android:layout_marginTop="16dp" android:layout_gravity="center" />
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="选择错误将导致验证失败" android:textSize="12sp" android:textColor="#999999" android:layout_marginTop="12dp" android:layout_gravity="center" />
 
 </LinearLayout>

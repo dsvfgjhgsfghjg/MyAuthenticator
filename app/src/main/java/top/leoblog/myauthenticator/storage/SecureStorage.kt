@@ -3,6 +3,7 @@ package top.leoblog.myauthenticator.storage
 import android.content.Context
 import android.content.SharedPreferences
 import android.provider.Settings
+import top.leoblog.myauthenticator.keepalive.KeepAliveConfig
 import java.util.UUID
 
 /**
@@ -43,6 +44,7 @@ class SecureStorage(context: Context) {
         private const val KEY_PIN_HASH = "pin_hash"
         private const val KEY_BIOMETRIC_ENABLED = "biometric_enabled"
         private const val KEY_LOCK_TIMEOUT_SECONDS = "lock_timeout_seconds"
+        private const val KEY_UNLOCK_TIMESTAMP = "unlock_timestamp"
 
         /**
          * 生成设备唯一 ID（旧方案，保留兼容）
@@ -223,6 +225,32 @@ class SecureStorage(context: Context) {
             .apply()
     }
 
+    // ==================== 保活配置 ====================
+
+    fun getKeepAliveMode(): String {
+        return sharedPreferences.getString(KeepAliveConfig.KEY_KEEPALIVE_MODE, KeepAliveConfig.DEFAULT_KEEPALIVE_MODE) ?: KeepAliveConfig.DEFAULT_KEEPALIVE_MODE
+    }
+
+    fun saveKeepAliveMode(mode: String) {
+        sharedPreferences.edit().putString(KeepAliveConfig.KEY_KEEPALIVE_MODE, mode).apply()
+    }
+
+    fun isPeriodicWakeupEnabled(): Boolean {
+        return sharedPreferences.getBoolean(KeepAliveConfig.KEY_PERIODIC_WAKEUP_ENABLED, KeepAliveConfig.DEFAULT_PERIODIC_WAKEUP_ENABLED)
+    }
+
+    fun savePeriodicWakeupEnabled(enabled: Boolean) {
+        sharedPreferences.edit().putBoolean(KeepAliveConfig.KEY_PERIODIC_WAKEUP_ENABLED, enabled).apply()
+    }
+
+    fun getWakeupIntervalMinutes(): Int {
+        return sharedPreferences.getInt(KeepAliveConfig.KEY_WAKEUP_INTERVAL_MINUTES, KeepAliveConfig.DEFAULT_WAKEUP_INTERVAL_MINUTES)
+    }
+
+    fun saveWakeupIntervalMinutes(minutes: Int) {
+        sharedPreferences.edit().putInt(KeepAliveConfig.KEY_WAKEUP_INTERVAL_MINUTES, minutes).apply()
+    }
+
     // ---- 检查是否已绑定 ----
 
     fun isBound(): Boolean {
@@ -272,5 +300,19 @@ class SecureStorage(context: Context) {
 
     fun setLockTimeoutSeconds(seconds: Int) {
         sharedPreferences.edit().putInt(KEY_LOCK_TIMEOUT_SECONDS, seconds).apply()
+    }
+
+    // ---- 解锁时间戳（SharedPreferences 持久化，跨 Activity 实例共享） ----
+
+    fun saveUnlockTimestamp(timestamp: Long) {
+        sharedPreferences.edit().putLong(KEY_UNLOCK_TIMESTAMP, timestamp).apply()
+    }
+
+    fun getUnlockTimestamp(): Long {
+        return sharedPreferences.getLong(KEY_UNLOCK_TIMESTAMP, 0L)
+    }
+
+    fun clearUnlockTimestamp() {
+        sharedPreferences.edit().remove(KEY_UNLOCK_TIMESTAMP).apply()
     }
 }

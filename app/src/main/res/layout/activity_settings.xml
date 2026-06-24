@@ -120,6 +120,65 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- ============ 保活设置卡片 ============ -->
+            <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="16dp" app:cardCornerRadius="12dp" app:cardElevation="4dp">
+
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/keepalive_section" android:textSize="16sp" android:textStyle="bold" />
+
+                    <!-- 保活模式切换 -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="vertical">
+
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/keepalive_mode_label" android:textSize="14sp" />
+
+                        <Spinner android:id="@+id/spinner_keepalive_mode" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" />
+
+                    </LinearLayout>
+
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginVertical="12dp" android:background="@android:color/darker_gray" />
+
+                    <!-- 定时唤醒 -->
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical" android:orientation="horizontal">
+
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/keepalive_periodic_wakeup" android:textSize="14sp" />
+
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/keepalive_periodic_wakeup_summary" android:textSize="12sp" android:textColor="@android:color/darker_gray" />
+
+                        </LinearLayout>
+
+                        <androidx.appcompat.widget.SwitchCompat android:id="@+id/switch_periodic_wakeup" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+
+                    </LinearLayout>
+
+                    <!-- 唤醒间隔（仅在定时唤醒启用时可见） -->
+                    <LinearLayout android:id="@+id/layout_wakeup_interval" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:gravity="center_vertical" android:orientation="horizontal" android:visibility="gone">
+
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/keepalive_wakeup_interval" android:textSize="14sp" />
+
+                        <Spinner android:id="@+id/spinner_wakeup_interval" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_marginStart="8dp" android:layout_weight="1" />
+
+                    </LinearLayout>
+
+                    <!-- MIUI 优化引导（仅在 MIUI 系统显示） -->
+                    <LinearLayout android:id="@+id/layout_miui_optimization" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:orientation="vertical" android:visibility="gone">
+
+                        <View android:layout_width="match_parent" android:layout_height="1dp" android:layout_marginBottom="12dp" android:background="@android:color/darker_gray" />
+
+                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="@string/keepalive_miui_title" android:textSize="14sp" android:textStyle="bold" />
+
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btn_miui_auto_start" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="@string/keepalive_miui_auto_start" style="@style/Widget.Material3.Button.OutlinedButton" />
+
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btn_miui_battery" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="4dp" android:text="@string/keepalive_miui_battery" style="@style/Widget.Material3.Button.OutlinedButton" />
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
         </LinearLayout>
 
     </LinearLayout>

@@ -9,6 +9,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.google.gson.JsonObject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -31,6 +32,13 @@ import java.util.Locale
 interface ChallengeCallback {
     fun onChallengeReceived(challenge: ChallengeMessage)
     fun onAuthResultReceived(result: AuthResultMessage)
+}
+
+/**
+ * WebSocket 管理后台仪表盘回调接口
+ */
+interface DashboardCallback {
+    fun onDashboardResponse(json: JsonObject)
 }
 
 /**
@@ -84,12 +92,20 @@ class WebSocketService : Service() {
         // WebSocket 客户端实例（供 Activity 直接调用）
         private var webSocketClient: AppWebSocketClient? = null
 
+        // Dashboard 回调接口（管理后台仪表盘）
+        var dashboardCallback: DashboardCallback? = null
+
         // 挑战回调接口
         var challengeCallback: ChallengeCallback? = null
         var connectionCallback: ConnectionCallback? = null
 
         // 握手状态回调（调试用）
         var handshakeCallback: HandshakeCallback? = null
+
+        /**
+         * 获取 WebSocket 客户端实例
+         */
+        fun getWebSocketClient(): AppWebSocketClient? = webSocketClient
 
         // 缓存的挑战（Activity 在后台时收到的推送，等前台后弹窗）
         @Volatile
@@ -296,6 +312,12 @@ class WebSocketService : Service() {
                         pendingAuthResult = result
                         Log.d(TAG, "⏸ Activity 不在前台，缓存认证结果: ${result.status}")
                     }
+                }
+
+                override fun onAdminDashboardResponse(data: JsonObject) {
+                    Log.d(TAG, "收到管理后台仪表盘响应")
+                    // 转发到 DashboardCallback（由 DashboardFragment 注册）
+                    dashboardCallback?.onDashboardResponse(data)
                 }
 
                 override fun onError(message: String) {

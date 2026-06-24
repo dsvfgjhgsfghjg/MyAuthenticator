@@ -67,6 +67,8 @@ class AppWebSocketClient(
         fun onChallenge(challenge: ChallengeMessage)
         /** 收到认证结果 */
         fun onAuthResult(result: AuthResultMessage)
+        /** 收到管理后台仪表盘响应 */
+        fun onAdminDashboardResponse(data: com.google.gson.JsonObject)
         /** 收到错误消息 */
         fun onError(message: String)
         /** 连接断开 */
@@ -373,6 +375,7 @@ class AppWebSocketClient(
             when (inner.get("type")?.asString) {
                 "challenge" -> handleChallenge(inner)
                 "auth_result" -> handleAuthResult(inner)
+                "admin_dashboard_response" -> handleAdminDashboardResponse(inner)
                 else -> Log.w(TAG, "加密消息中的未知类型: ${inner.get("type")}")
             }
         } catch (e: Exception) {
@@ -401,6 +404,18 @@ class AppWebSocketClient(
         }
     }
 
+    /**
+     * 处理管理后台仪表盘响应
+     *
+     * 响应格式（加密通道内）：
+     * - 成功: {"type":"admin_dashboard_response","status":"ok","data":{...}}
+     * - 无权限: {"type":"admin_dashboard_response","status":"no_ability","message":"请联系超级管理员分配权限"}
+     */
+    private fun handleAdminDashboardResponse(json: JsonObject) {
+        Log.d(TAG, "📥 收到管理后台仪表盘响应: status=${json.get("status")?.asString}")
+        listener.onAdminDashboardResponse(json)
+    }
+
     private fun handleError(json: JsonObject) {
         val message = json.get("message")?.asString ?: "未知错误"
         Log.e(TAG, "❌ 服务端错误: $message")
@@ -410,6 +425,30 @@ class AppWebSocketClient(
     }
 
     // ==================== 发送消息 ====================
+
+    /**
+     * 请求管理后台仪表盘数据
+     *
+     * 通过加密通道发送 admin_dashboard_request 消息。
+     * 响应将通过 onAdminDashboardResponse 回调返回。
+     *
+     * 权限说明：
+     * - 非管理员 → 返回 error 消息
+     * - 超级管理员 → 返回完整仪表盘数据
+     * - 管理员无能力 → 返回 status=no_ability 提示
+     * - 管理员有能力 → 返回完整仪表盘数据
+     */
+    fun requestAdminDashboard() {
+        if (aesKey == null) {
+            Log.w(TAG, "加密通道未就绪，无法请求仪表盘数据")
+            listener.onError("加密通道未就绪，请等待连接完成")
+            return
+        }
+
+        val plainJson = """{"type":"admin_dashboard_request"}"""
+        sendEncryptedMessage(plainJson)
+        Log.d(TAG, "📤 发送管理后台仪表盘请求")
+    }
 
     /**
      * 发送挑战响应（用户选择数字后）

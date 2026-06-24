@@ -30,7 +30,8 @@ class AuthenticatorFragment : Fragment() {
 
     private lateinit var secureStorage: SecureStorage
     private var _bindingView: View? = null
-    private val bindingView get() = _bindingView!!
+    private val bindingView get() = _bindingView
+      ?: error("AuthenticatorFragment: _bindingView is null — view destroyed")
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -104,6 +105,7 @@ class AuthenticatorFragment : Fragment() {
      * 显示 Dashboard 数据
      */
     private fun displayDashboard(dashboard: DashboardResponse) {
+        if (!isAdded || _bindingView == null) return
         // 1. 状态栏 — 连接状态 + 当前用户
         updateConnectionStatus(true)
         val displayName = dashboard.user.nickname ?: dashboard.user.username
@@ -195,6 +197,7 @@ class AuthenticatorFragment : Fragment() {
      * 使用本地缓存的 SecureStorage 数据展示（API 失败时）
      */
     private fun displayCachedState() {
+        if (!isAdded || _bindingView == null) return
         val nickname = secureStorage.getNickname() ?: secureStorage.getUsername()
         if (nickname != null) {
             bindingView.findViewById<TextView>(R.id.tv_current_user).text = "用户: $nickname"
@@ -215,6 +218,7 @@ class AuthenticatorFragment : Fragment() {
      * 未登录状态
      */
     private fun showLoggedOutState() {
+        if (!isAdded || _bindingView == null) return
         updateConnectionStatus(false)
         bindingView.findViewById<TextView>(R.id.tv_current_user).text = "用户: 未登录"
         bindingView.findViewById<TextView>(R.id.tv_last_result).text = getString(R.string.last_result_empty)
@@ -226,6 +230,7 @@ class AuthenticatorFragment : Fragment() {
      * 更新连接状态指示器
      */
     private fun updateConnectionStatus(connected: Boolean) {
+        if (!isAdded || _bindingView == null) return
         val tvStatus = bindingView.findViewById<TextView>(R.id.tv_connection_status)
         if (connected) {
             tvStatus.text = "● 已连接"
@@ -237,6 +242,7 @@ class AuthenticatorFragment : Fragment() {
     }
 
     private fun showLoading(show: Boolean) {
+        if (!isAdded || _bindingView == null) return
         bindingView.findViewById<ProgressBar>(R.id.progress_bar).visibility =
             if (show) View.VISIBLE else View.GONE
     }

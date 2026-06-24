@@ -26,6 +26,7 @@ class UnlockActivity : AppCompatActivity() {
     private lateinit var secureStorage: SecureStorage
     private lateinit var lockManager: LockManager
     private var isVerified = false
+    private var biometricAutoTriggered = false  // 防止 onResume 中重复触发指纹
 
     companion object {
         private const val TAG = "UnlockActivity"
@@ -53,6 +54,24 @@ class UnlockActivity : AppCompatActivity() {
         }
 
         setupViews()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // 仅在首次打开解锁页时自动弹出指纹验证
+        // 用户关闭指纹弹窗后 onResume 会被再次调用，但 biometricAutoTriggered 阻止二次弹出
+        if (!biometricAutoTriggered && !isVerified && secureStorage.isBiometricEnabled()) {
+            biometricAutoTriggered = true
+            val biometricManager = BiometricManager.from(this)
+            if (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)
+                == BiometricManager.BIOMETRIC_SUCCESS) {
+                binding.cvFingerprint.postDelayed({
+                    if (!isFinishing && !isVerified) {
+                        showBiometricPrompt()
+                    }
+                }, 200)
+            }
+        }
     }
 
     private fun setupViews() {
@@ -114,6 +133,7 @@ class UnlockActivity : AppCompatActivity() {
             BiometricManager.BIOMETRIC_SUCCESS -> {
                 binding.cvFingerprint.visibility = android.view.View.VISIBLE
                 binding.cvFingerprint.setOnClickListener { showBiometricPrompt() }
+                // 注意：自动触发在 onResume 中处理，这里不调用
             }
             BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE,
             BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE,
@@ -125,12 +145,18 @@ class UnlockActivity : AppCompatActivity() {
     }
 
     private fun showBiometricPrompt() {
+        if (isVerified || isFinishing) return
+
         val executor: Executor = ContextCompat.getMainExecutor(this)
         val biometricPrompt = BiometricPrompt(this, executor,
             object : BiometricPrompt.AuthenticationCallback() {
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
-                    showError(errString.toString())
+                    // 用户取消或系统错误，显示错误信息，但不阻止继续使用 PIN
+                    if (errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON &&
+                        errorCode != BiometricPrompt.ERROR_USER_CANCELED) {
+                        showError(errString.toString())
+                    }
                 }
 
                 override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
@@ -147,6 +173,7 @@ class UnlockActivity : AppCompatActivity() {
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle(getString(R.string.biometric_hint))
             .setSubtitle(getString(R.string.fingerprint_hint))
+            .setNegativeButtonText(getString(R.string.btn_cancel))
             .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
             .build()
 

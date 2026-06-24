@@ -1,26 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/nav_graph"
-    app:startDestination="@id/nav_authenticator">
+    xmlns:tools="http://schemas.android.com/tools" android:id="@+id/nav_graph" app:startDestination="@id/nav_authenticator">
 
-    <fragment
-        android:id="@+id/nav_authenticator"
-        android:name="top.leoblog.myauthenticator.ui.main.AuthenticatorFragment"
-        android:label="@string/tab_authenticator"
-        tools:layout="@layout/fragment_authenticator" />
+    <fragment android:id="@+id/nav_authenticator" android:name="top.leoblog.myauthenticator.ui.main.AuthenticatorFragment" android:label="@string/tab_authenticator" tools:layout="@layout/fragment_authenticator" />
 
-    <fragment
-        android:id="@+id/nav_dashboard"
-        android:name="top.leoblog.myauthenticator.ui.main.DashboardFragment"
-        android:label="@string/tab_dashboard"
-        tools:layout="@layout/fragment_dashboard" />
+    <fragment android:id="@+id/nav_dashboard" android:name="top.leoblog.myauthenticator.ui.dashboard.DashboardFragment" android:label="@string/tab_dashboard" tools:layout="@layout/fragment_dashboard" />
 
-    <fragment
-        android:id="@+id/nav_profile"
-        android:name="top.leoblog.myauthenticator.ui.main.ProfileFragment"
-        android:label="@string/tab_profile"
-        tools:layout="@layout/fragment_profile" />
+    <fragment android:id="@+id/nav_profile" android:name="top.leoblog.myauthenticator.ui.main.ProfileFragment" android:label="@string/tab_profile" tools:layout="@layout/fragment_profile" />
 
 </navigation>
