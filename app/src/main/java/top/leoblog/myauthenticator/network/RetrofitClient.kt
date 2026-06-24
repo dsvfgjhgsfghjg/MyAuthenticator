@@ -1,14 +1,12 @@
 package top.leoblog.myauthenticator.network
 
 import android.content.Context
-import android.content.Intent
 import android.util.Log
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import top.leoblog.myauthenticator.storage.SecureStorage
-import top.leoblog.myauthenticator.ui.login.LoginActivity
 import java.util.concurrent.TimeUnit
 
 /**
@@ -58,18 +56,18 @@ object RetrofitClient {
     }
 
     /**
-     * 401 响应拦截器 — Token 过期时跳转到登录页
+     * 认证错误拦截器 — 401/403（Token 过期/认证过期）时触发 AuthExpiredHandler
+     *
+     * 不再直接跳转到登录页，而是通过 AuthExpiredHandler 通知当前 Activity
+     * 弹出提示窗口，让用户确认后跳转登录页，跳转时保留 deviceId/deviceSecret。
      */
-    private fun create401Interceptor(context: Context): okhttp3.Interceptor {
+    private fun createAuthErrorInterceptor(context: Context): okhttp3.Interceptor {
         return okhttp3.Interceptor { chain ->
             val response = chain.proceed(chain.request())
-            if (response.code == 401) {
-                Log.w(TAG, "Token 过期，跳转到登录页")
+            if (response.code == 401 || response.code == 403) {
+                Log.w(TAG, "认证过期 (HTTP ${response.code})，触发 AuthExpiredHandler")
                 SecureStorage(context).clearToken()
-                val intent = Intent(context, LoginActivity::class.java).apply {
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                }
-                context.startActivity(intent)
+                AuthExpiredHandler.notifyAuthExpired("HTTP ${response.code}")
             }
             response
         }
@@ -89,16 +87,18 @@ object RetrofitClient {
     }
 
     /**
-     * 创建带 Auth 拦截器的 OkHttpClient
+     * 创建带 Auth 拦截器和认证过期处理的 OkHttpClient
      * 适用于需要 JWT Token 的请求（获取设备列表、检查绑定状态、解绑等）
+     * 401/403 时会触发 AuthExpiredHandler 弹窗提示重新登录
      */
-    private fun createAuthenticatedClient(storage: SecureStorage): OkHttpClient {
+    private fun createAuthenticatedClient(context: Context, storage: SecureStorage): OkHttpClient {
         return OkHttpClient.Builder()
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
             .addInterceptor(loggingInterceptor)
             .addInterceptor(createAuthInterceptor(storage))
+            .addInterceptor(createAuthErrorInterceptor(context))
             .build()
     }
 
@@ -112,14 +112,15 @@ object RetrofitClient {
     }
 
     /**
-     * 获取带 Auth 拦截器的 ApiService 实例
+     * 获取带 Auth 拦截器和认证过期处理的 ApiService 实例
      *
+     * @param context Context（用于 401/403 过期处理中的 SharedPreferences）
      * @param storage SecureStorage 实例，用于读取 JWT Token
      */
-    fun createAuthenticatedApiService(storage: SecureStorage): ApiService {
+    fun createAuthenticatedApiService(context: Context, storage: SecureStorage): ApiService {
         return Retrofit.Builder()
             .baseUrl("${NetworkConfig.restBaseUrl}/")
-            .client(createAuthenticatedClient(storage))
+            .client(createAuthenticatedClient(context, storage))
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(ApiService::class.java)

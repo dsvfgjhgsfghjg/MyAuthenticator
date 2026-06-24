@@ -18,6 +18,7 @@ import top.leoblog.myauthenticator.MyAuthenticatorApp
 import top.leoblog.myauthenticator.model.AuthResultMessage
 import top.leoblog.myauthenticator.model.ChallengeMessage
 import top.leoblog.myauthenticator.network.AppWebSocketClient
+import top.leoblog.myauthenticator.network.AuthExpiredHandler
 import top.leoblog.myauthenticator.network.BugReportManager
 import top.leoblog.myauthenticator.network.RetrofitClient
 import top.leoblog.myauthenticator.storage.SecureStorage
@@ -354,6 +355,21 @@ class WebSocketService : Service() {
 
                     // 自动重连
                     scheduleReconnect()
+                }
+
+                override fun onAuthExpired(message: String) {
+                    Log.w(TAG, "WebSocket 认证过期: $message")
+                    // 停止重连（避免无效的重连循环）
+                    shouldReconnect = false
+                    cancelReconnect()
+                    // 断开 WebSocket
+                    disconnectWebSocket()
+                    // 清除 Token
+                    secureStorage.clearToken()
+                    // 更新通知
+                    updateNotification("认证过期，请重新登录")
+                    // 通知 AuthExpiredHandler 触发弹出窗口
+                    AuthExpiredHandler.notifyAuthExpired("WebSocket: $message")
                 }
 
                 override fun onHandshakeStateChanged(state: AppWebSocketClient.HandshakeState) {

@@ -80,6 +80,14 @@ class AppWebSocketClient(
          * 握手状态变更回调（供调试诊断使用）
          */
         fun onHandshakeStateChanged(state: HandshakeState)
+
+        /**
+         * 认证过期回调
+         *
+         * 当 WebSocket 连接时服务端返回认证过期错误（如 token 已失效），
+         * 通过此回调通知上层处理。
+         */
+        fun onAuthExpired(message: String)
     }
 
     private val gson = Gson()
@@ -264,8 +272,36 @@ class AppWebSocketClient(
             val message = json.get("message")?.asString ?: "绑定失败"
             handshakeState = HandshakeState.FAILED
             listener.onHandshakeStateChanged(handshakeState)
-            listener.onError(message)
+            // 检测认证过期错误（token 失效、过期等）
+            if (isAuthExpiredMessage(status, message)) {
+                Log.w(TAG, "bind_ack 返回认证过期: $message")
+                listener.onAuthExpired(message)
+            } else {
+                listener.onError(message)
+            }
         }
+    }
+
+    /**
+     * 判断错误消息是否表示认证过期
+     *
+     * 后端可能在 bind_ack 或 error 消息中返回以下含义：
+     * - unauthorized: token 无效
+     * - expired: token 过期
+     * - invalid token: token 格式错误
+     */
+    private fun isAuthExpiredMessage(status: String, message: String): Boolean {
+        val lowerMessage = message.lowercase()
+        val lowerStatus = status.lowercase()
+        return lowerStatus.contains("unauthorized") ||
+               lowerStatus.contains("expired") ||
+               lowerStatus.contains("invalid token") ||
+               lowerMessage.contains("unauthorized") ||
+               lowerMessage.contains("expired") ||
+               lowerMessage.contains("invalid") ||
+               lowerMessage.contains("token") ||
+               lowerMessage.contains("认证过期") ||
+               lowerMessage.contains("login required")
     }
 
     private fun handleDhInit(json: JsonObject) {
@@ -418,10 +454,17 @@ class AppWebSocketClient(
 
     private fun handleError(json: JsonObject) {
         val message = json.get("message")?.asString ?: "未知错误"
+        val status = json.get("status")?.asString ?: "error"
         Log.e(TAG, "❌ 服务端错误: $message")
         handshakeState = HandshakeState.FAILED
         listener.onHandshakeStateChanged(handshakeState)
-        listener.onError(message)
+        // 检测认证过期错误
+        if (isAuthExpiredMessage(status, message)) {
+            Log.w(TAG, "error 消息表示认证过期: $message")
+            listener.onAuthExpired(message)
+        } else {
+            listener.onError(message)
+        }
     }
 
     // ==================== 发送消息 ====================

@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.NavHostFragment
@@ -13,6 +14,7 @@ import kotlinx.coroutines.launch
 import top.leoblog.myauthenticator.R
 import top.leoblog.myauthenticator.model.AuthResultMessage
 import top.leoblog.myauthenticator.model.ChallengeMessage
+import top.leoblog.myauthenticator.network.AuthExpiredHandler
 import top.leoblog.myauthenticator.service.ChallengeCallback
 import top.leoblog.myauthenticator.service.WebSocketService
 import top.leoblog.myauthenticator.storage.DeviceIdManager
@@ -93,6 +95,16 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
+        // 注册认证过期监听器
+        AuthExpiredHandler.registerListener(object : AuthExpiredHandler.OnAuthExpiredListener {
+            override fun onAuthExpired(source: String) {
+                Log.w(TAG, "认证过期通知: source=$source")
+                runOnUiThread {
+                    showAuthExpiredDialog(source)
+                }
+            }
+        })
+
         // 仅在 app 从后台切回前台时检查锁，内部 Activity 间跳转不触发锁定
         if (MyAuthenticatorApp.checkAndClearForegroundFlag()) {
             val lockManager = LockManager(secureStorage)
@@ -146,6 +158,8 @@ class MainActivity : AppCompatActivity() {
         super.onPause()
         // 离开时取消回调，避免内存泄漏
         WebSocketService.challengeCallback = null
+        // 注销认证过期监听器
+        AuthExpiredHandler.unregisterListener()
     }
 
     /**
@@ -173,6 +187,45 @@ class MainActivity : AppCompatActivity() {
             putExtra(WebSocketService.EXTRA_TOKEN, secureStorage.getToken())
             putExtra(WebSocketService.EXTRA_DEVICE_ID, secureStorage.getDeviceId())
             putExtra(WebSocketService.EXTRA_DEVICE_SECRET, secureStorage.getDeviceSecret() ?: "")
+        }
+        startService(intent)
+    }
+
+    /**
+     * 显示认证过期提示弹窗
+     *
+     * 用户点击"确定"后跳转到 LoginActivity，并携带现有的 deviceId 以复用设备。
+     */
+    private fun showAuthExpiredDialog(source: String) {
+        Log.w(TAG, "显示认证过期弹窗 (source=$source)")
+
+        // 读取现有的 deviceId 用于复用
+        val existingDeviceId = secureStorage.getDeviceId()
+
+        AlertDialog.Builder(this)
+            .setTitle("认证过期")
+            .setMessage("您的登录状态已过期，请重新登录。\n\n原因: $source\n\n确认后将跳转到登录页，并复用当前设备信息。")
+            .setCancelable(false)
+            .setPositiveButton("确定") { _, _ ->
+                // 停止 WebSocket 服务
+                stopWebSocketService()
+                // 跳转到登录页，携带现有 deviceId 以复用设备
+                val intent = Intent(this, LoginActivity::class.java).apply {
+                    putExtra(LoginActivity.EXTRA_DEVICE_ID, existingDeviceId)
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                }
+                startActivity(intent)
+                finish()
+            }
+            .show()
+    }
+
+    /**
+     * 停止 WebSocket 前台服务
+     */
+    private fun stopWebSocketService() {
+        val intent = Intent(this, WebSocketService::class.java).apply {
+            action = WebSocketService.ACTION_DISCONNECT
         }
         startService(intent)
     }

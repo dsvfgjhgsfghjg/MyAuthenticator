@@ -19,8 +19,20 @@ import top.leoblog.myauthenticator.ui.main.MainActivity
  *
  * 调用 POST /api/auth/app/bind 实现密码绑定，成功后将 JWT Token
  * 存入 EncryptedSharedPreferences，然后跳转到主界面。
+ *
+ * 也支持认证过期后重新登录的场景：通过 intent extra "extra_device_id"
+ * 传入已有的 deviceId，复用现有设备信息。
  */
 class LoginActivity : AppCompatActivity() {
+
+    companion object {
+        private const val TAG = "LoginActivity"
+
+        /**
+         * Intent extra 常量 — 传入已有的 deviceId（认证过期后重新登录时使用）
+         */
+        const val EXTRA_DEVICE_ID = "extra_device_id"
+    }
 
     private lateinit var binding: ActivityLoginBinding
     private lateinit var secureStorage: SecureStorage
@@ -32,6 +44,22 @@ class LoginActivity : AppCompatActivity() {
 
         secureStorage = SecureStorage(this)
         setupViews()
+        checkExistingDevice()
+    }
+
+    /**
+     * 检查是否有已存在的设备信息（认证过期后重新登录的场景）
+     * 如果已有 deviceId 和 deviceSecret，隐藏设备码状态提示，
+     * 因为这些信息是复用的，不需要重新获取。
+     */
+    private fun checkExistingDevice() {
+        val existingDeviceId = intent.getStringExtra(EXTRA_DEVICE_ID)
+        if (existingDeviceId != null) {
+            binding.tvStatus.text = "检测到已有设备，直接登录即可复用当前设备"
+            binding.tvStatus.setTextColor(
+                resources.getColor(android.R.color.holo_green_dark, theme)
+            )
+        }
     }
 
     private fun setupViews() {
@@ -61,9 +89,23 @@ class LoginActivity : AppCompatActivity() {
 
     /**
      * 确保设备码就绪，若本地没有则调用服务端 API 获取
+     *
+     * 如果是认证过期后重新登录（intent 携带了 EXTRA_DEVICE_ID），
+     * 跳过设备码获取，直接复用现有的 deviceId 和 deviceSecret。
+     *
      * @return true 表示设备码已就绪，false 表示获取失败
      */
     private suspend fun ensureDeviceSecretReady(): Boolean {
+        // 如果是认证过期后重新登录，检查 intent 中是否携带了已有的 deviceId
+        val existingDeviceId = intent.getStringExtra(EXTRA_DEVICE_ID)
+        if (existingDeviceId != null) {
+            val existingSecret = secureStorage.getDeviceSecret()
+            if (!existingSecret.isNullOrBlank()) {
+                // 复用已有的 deviceId 和 deviceSecret，不需要重新获取
+                return true
+            }
+        }
+
         // 先检查本地是否已有 deviceSecret
         val existingSecret = secureStorage.getDeviceSecret()
         if (!existingSecret.isNullOrBlank()) {
@@ -89,7 +131,11 @@ class LoginActivity : AppCompatActivity() {
                     return@launch
                 }
 
-                val deviceId = secureStorage.getDeviceId() ?: SecureStorage.generateDeviceId(this@LoginActivity)
+                // 优先使用 intent 传入的已有 deviceId（认证过期后重新登录）
+                val deviceId = intent.getStringExtra(EXTRA_DEVICE_ID)
+                    ?: secureStorage.getDeviceId()
+                    ?: SecureStorage.generateDeviceId(this@LoginActivity)
+
                 val deviceSecret = secureStorage.getDeviceSecret() ?: ""
                 val request = BindPasswordRequest(
                     username = username,
